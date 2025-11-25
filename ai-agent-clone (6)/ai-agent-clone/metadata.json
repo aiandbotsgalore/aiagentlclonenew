@@ -1,7 +1,0 @@
-{
-  "name": "EchoSphere AI",
-  "description": "An interactive and customizable conversational AI agent that responds audibly and can access real-time information from the web. Personalize its name, voice, and personality for a unique chat experience.",
-  "requestFramePermissions": [
-    "microphone"
-  ]
-}
