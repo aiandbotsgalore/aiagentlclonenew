@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+build/
+*.js
+*.js.map
+
+# Electron
+out/
+.webpack/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Knowledge Base Index
+snuggles-index.json
+
+# Dexie Database
+indexedDB/
+
+# Config
+config.json
+
+# Temporary files
+*.tmp
+*.temp
