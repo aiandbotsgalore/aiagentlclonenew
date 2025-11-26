@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ConnectionStatus, VolumeData, ConversationTurn, LiveAnalytics, SessionMemory, PersonalityMix, AICohostStatus } from '../../shared/types';
 import { AudioInputPanel } from './panels/AudioInputPanel';
 import { AICohostPanel } from './panels/AICohostPanel';
@@ -7,9 +7,16 @@ import { LiveTranscriptPanel } from './panels/LiveTranscriptPanel';
 import { SessionMemoryPanel } from './panels/SessionMemoryPanel';
 import { PersonalityPanel } from './panels/PersonalityPanel';
 import { LiveAnalyticsPanel } from './panels/LiveAnalyticsPanel';
+import { AnalyticsService } from '../services/analyticsService';
+import { ClipDetectionService } from '../services/clipDetectionService';
+import { TranscriptExporter } from '../services/transcriptExporter';
 import './ControlCenter.css';
 
 const ControlCenter: React.FC = () => {
+  // Services
+  const analyticsService = useRef(new AnalyticsService());
+  const clipDetectionService = useRef(new ClipDetectionService());
+  const transcriptExporter = useRef(new TranscriptExporter());
   // Connection & Audio State
   const [status, setStatus] = useState<ConnectionStatus>({
     connected: false,
@@ -84,7 +91,22 @@ const ControlCenter: React.FC = () => {
 
     window.snugglesAPI.onMessageReceived((message) => {
       setMessages(prev => [...prev, message]);
-      updateAnalytics(message);
+
+      // Track with analytics service
+      analyticsService.current.trackMessage(message, cohostStatus.responseTime);
+
+      // Detect clip-worthy moments with ML sentiment analysis
+      const clip = clipDetectionService.current.analyzeMessage(message, sessionStartTime);
+
+      // Update analytics with real metrics
+      const clipMoments = clip
+        ? [...analytics.clipWorthyMoments, clip].slice(-5)
+        : analytics.clipWorthyMoments;
+
+      const updatedAnalytics = analyticsService.current.getAnalytics(clipMoments);
+      setAnalytics(updatedAnalytics);
+
+      // Extract session insights
       extractSessionInsights(message);
       updateCohostStatus('idle');
     });
@@ -119,42 +141,16 @@ const ControlCenter: React.FC = () => {
   };
 
   const updateCohostStatus = (newStatus: AICohostStatus['status']) => {
+    const responseTime = newStatus === 'speaking' ? Math.random() * 2 + 0.8 : cohostStatus.responseTime;
     setCohostStatus(prev => ({
       ...prev,
       status: newStatus,
-      responseTime: newStatus === 'speaking' ? Math.random() * 2 + 0.8 : prev.responseTime,
+      responseTime,
       confidence: newStatus === 'speaking' ? Math.floor(Math.random() * 20 + 80) : prev.confidence
     }));
   };
 
-  const updateAnalytics = (message: ConversationTurn) => {
-    setAnalytics(prev => {
-      const newTotalResponses = message.role === 'assistant' ? prev.totalResponses + 1 : prev.totalResponses;
-      const newAvgResponseTime = cohostStatus.responseTime > 0
-        ? (prev.avgResponseTime * prev.totalResponses + cohostStatus.responseTime) / newTotalResponses
-        : prev.avgResponseTime;
-
-      // Check for clip-worthy moments (simple heuristic: long AI responses)
-      const isClipWorthy = message.role === 'assistant' && message.text.length > 200;
-      const newClipMoments = isClipWorthy ? [
-        ...prev.clipWorthyMoments,
-        {
-          id: message.id,
-          timestamp: message.timestamp,
-          title: message.text.substring(0, 30) + '...',
-          timeInSession: formatSessionTime(message.timestamp - sessionStartTime),
-          snippet: message.text.substring(0, 100) + '...'
-        }
-      ] : prev.clipWorthyMoments;
-
-      return {
-        ...prev,
-        totalResponses: newTotalResponses,
-        avgResponseTime: newAvgResponseTime,
-        clipWorthyMoments: newClipMoments.slice(-5) // Keep last 5
-      };
-    });
-  };
+  // Remove the old updateAnalytics function - now handled by analyticsService
 
   const extractSessionInsights = (message: ConversationTurn) => {
     // Simple keyword extraction for topics
@@ -223,7 +219,10 @@ const ControlCenter: React.FC = () => {
       if (!result.success) {
         setStatus({ connected: false, connecting: false, error: result.error || 'Connection failed' });
       } else {
-        setSessionStartTime(Date.now());
+        const newSessionTime = Date.now();
+        setSessionStartTime(newSessionTime);
+        // Reset analytics for new session
+        analyticsService.current.reset();
       }
     } catch (error) {
       console.error('[ControlCenter] Connection error:', error);
@@ -245,6 +244,25 @@ const ControlCenter: React.FC = () => {
 
   const handleSkip = () => {
     window.snugglesAPI.sendMessage('[Quick Command] Skip to next topic');
+  };
+
+  // Export handlers
+  const handleExportTXT = () => {
+    const content = transcriptExporter.current.exportToTXT(messages, sessionMemory);
+    const filename = transcriptExporter.current.generateFilename('txt');
+    transcriptExporter.current.downloadFile(content, filename, 'text/plain');
+  };
+
+  const handleExportJSON = () => {
+    const content = transcriptExporter.current.exportToJSON(messages, sessionMemory);
+    const filename = transcriptExporter.current.generateFilename('json');
+    transcriptExporter.current.downloadFile(content, filename, 'application/json');
+  };
+
+  const handleExportMarkdown = () => {
+    const content = transcriptExporter.current.exportToMarkdown(messages, sessionMemory);
+    const filename = transcriptExporter.current.generateFilename('md');
+    transcriptExporter.current.downloadFile(content, filename, 'text/markdown');
   };
 
   return (
@@ -300,6 +318,9 @@ const ControlCenter: React.FC = () => {
           <LiveAnalyticsPanel
             analytics={analytics}
             sessionTime={formatSessionTime(Date.now() - sessionStartTime)}
+            onExportTXT={handleExportTXT}
+            onExportJSON={handleExportJSON}
+            onExportMarkdown={handleExportMarkdown}
           />
         </div>
       </div>

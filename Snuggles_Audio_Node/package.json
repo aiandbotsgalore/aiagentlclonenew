@@ -30,10 +30,12 @@
     "eventemitter3": "^5.0.1",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.555.0",
+    "natural": "^8.1.0",
     "pdf-parse": "^1.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recharts": "^3.5.0",
+    "sentiment": "^5.0.2",
     "ws": "^8.18.0"
   },
   "devDependencies": {

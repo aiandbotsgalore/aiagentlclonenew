@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PersonalityMix } from '../../../shared/types';
+import { VoicePreviewService } from '../../services/voicePreviewService';
 
 interface PersonalityPanelProps {
   personality: PersonalityMix;
@@ -12,12 +13,33 @@ export const PersonalityPanel: React.FC<PersonalityPanelProps> = ({
 }) => {
   const [selectedVoice, setSelectedVoice] = useState('Energetic Podcaster');
   const [responseStyle, setResponseStyle] = useState<'conversational' | 'formal'>('conversational');
+  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
+  const voicePreviewService = useRef(new VoicePreviewService());
 
   const handleSliderChange = (key: keyof PersonalityMix, value: number) => {
     onPersonalityChange({
       ...personality,
       [key]: value
     });
+  };
+
+  const handlePreviewVoice = async () => {
+    if (isPreviewPlaying) {
+      voicePreviewService.current.stop();
+      setIsPreviewPlaying(false);
+    } else {
+      setIsPreviewPlaying(true);
+      try {
+        await voicePreviewService.current.previewVoice(
+          selectedVoice,
+          "Welcome to the future of AI conversations. I'm Dr. Snuggles, your hyper-intelligent AI companion."
+        );
+      } catch (error) {
+        console.error('[VoicePreview] Failed:', error);
+      } finally {
+        setIsPreviewPlaying(false);
+      }
+    }
   };
 
   return (
@@ -37,7 +59,12 @@ export const PersonalityPanel: React.FC<PersonalityPanelProps> = ({
           <option value="Tech Expert">Tech Expert</option>
           <option value="Casual Friend">Casual Friend</option>
         </select>
-        <button className="preview-voice-btn">Preview voice</button>
+        <button
+          className={`preview-voice-btn ${isPreviewPlaying ? 'playing' : ''}`}
+          onClick={handlePreviewVoice}
+        >
+          {isPreviewPlaying ? '⏹ Stop Preview' : '▶ Preview voice'}
+        </button>
       </div>
 
       {/* Personality Mix Sliders */}

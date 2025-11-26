@@ -4,11 +4,17 @@ import { LiveAnalytics } from '../../../shared/types';
 interface LiveAnalyticsPanelProps {
   analytics: LiveAnalytics;
   sessionTime: string;
+  onExportTXT: () => void;
+  onExportJSON: () => void;
+  onExportMarkdown: () => void;
 }
 
 export const LiveAnalyticsPanel: React.FC<LiveAnalyticsPanelProps> = ({
   analytics,
-  sessionTime
+  sessionTime,
+  onExportTXT,
+  onExportJSON,
+  onExportMarkdown
 }) => {
   return (
     <div className="panel live-analytics-panel">
@@ -96,14 +102,19 @@ export const LiveAnalyticsPanel: React.FC<LiveAnalyticsPanelProps> = ({
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Export Actions */}
       <div className="analytics-section">
-        <h3 className="section-title">Quick Actions</h3>
+        <h3 className="section-title">Export Transcript</h3>
         <div className="quick-actions-list">
-          <button className="action-btn action-primary">Generate Cold Open</button>
-          <button className="action-btn action-secondary">Create Segment Bumper</button>
-          <button className="action-btn action-success">Generate Summary</button>
-          <button className="action-btn action-neutral">Export Transcript</button>
+          <button className="action-btn action-primary" onClick={onExportTXT}>
+            📄 Export as TXT
+          </button>
+          <button className="action-btn action-secondary" onClick={onExportJSON}>
+            📊 Export as JSON
+          </button>
+          <button className="action-btn action-success" onClick={onExportMarkdown}>
+            📝 Export as Markdown
+          </button>
         </div>
       </div>
     </div>
