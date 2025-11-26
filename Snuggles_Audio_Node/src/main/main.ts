@@ -3,7 +3,7 @@ import path from 'path';
 import { AudioManager } from './audio/audioManager';
 import { GeminiClient } from './llm/geminiClient';
 import { KnowledgeStore } from './knowledge/store';
-import { IPC_CHANNELS, AudioDevice, AppConfig } from '../shared/types';
+import { IPC_CHANNELS, AppConfig } from '../shared/types';
 import fs from 'fs';
 
 const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');

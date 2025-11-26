@@ -116,6 +116,31 @@ export interface QuickCommand {
   action: () => void;
 }
 
+// === December 2025 Audio Streaming Types ===
+
+export interface LatencyMetrics {
+  audioUpload: number;      // ms to upload audio chunk
+  geminiProcessing: number; // ms for Gemini to respond
+  audioDownload: number;    // ms to download audio response
+  totalRoundtrip: number;   // ms total latency
+  timestamp: number;
+}
+
+export interface VADState {
+  isSpeaking: boolean;
+  isGeminiSpeaking: boolean;
+  speechFrameCount: number;
+  silenceFrameCount: number;
+}
+
+export interface AudioStreamConfig {
+  inputSampleRate: number;  // Typically 48000
+  outputSampleRate: number; // Typically 48000
+  geminiInputRate: number;  // 16000 (new standard)
+  geminiOutputRate: number; // 24000
+  enableVAD: boolean;
+}
+
 // IPC Channel Names
 export const IPC_CHANNELS = {
   GET_AUDIO_DEVICES: 'get-audio-devices',
@@ -135,5 +160,11 @@ export const IPC_CHANNELS = {
   GET_ANALYTICS: 'get-analytics',
   GET_SESSION_MEMORY: 'get-session-memory',
   UPDATE_PERSONALITY: 'update-personality',
-  EXECUTE_QUICK_COMMAND: 'execute-quick-command'
+  EXECUTE_QUICK_COMMAND: 'execute-quick-command',
+  // December 2025 Audio Streaming Channels
+  GENAI_START_SESSION: 'genai:startSession',
+  GENAI_SEND_AUDIO_CHUNK: 'genai:sendAudioChunk',
+  GENAI_AUDIO_RECEIVED: 'genai:audioReceived',
+  GENAI_LATENCY_UPDATE: 'genai:latencyUpdate',
+  GENAI_VAD_STATE: 'genai:vadState'
 } as const;

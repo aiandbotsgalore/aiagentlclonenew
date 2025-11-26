@@ -27,8 +27,6 @@ export class AudioManager extends EventEmitter<AudioManagerEvents> {
   private inputResampler: AudioResampler;
   private outputResampler: AudioResampler;
   private muted: boolean = false;
-  private _currentInputDevice: string | null = null;
-  private _currentOutputDevice: string | null = null;
 
   // Volume monitoring
   private inputVolume: number = 0;
@@ -64,8 +62,6 @@ export class AudioManager extends EventEmitter<AudioManagerEvents> {
    * Set active audio devices
    */
   public async setDevices(inputId: string, outputId: string): Promise<void> {
-    this._currentInputDevice = inputId;
-    this._currentOutputDevice = outputId;
     console.log(`[AudioManager] Devices set: Input=${inputId}, Output=${outputId}`);
   }
 

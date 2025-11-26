@@ -23,7 +23,7 @@
   "author": "Dr. Snuggles Team",
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
+    "@google/genai": "^1.30.0",
     "@orama/orama": "^2.0.0",
     "@orama/plugin-data-persistence": "^2.0.0",
     "dexie": "^4.0.0",
@@ -35,8 +35,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recharts": "^3.5.0",
-    "sentiment": "^5.0.2",
-    "ws": "^8.18.0"
+    "sentiment": "^5.0.2"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
