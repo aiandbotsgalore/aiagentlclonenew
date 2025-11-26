@@ -2,7 +2,7 @@
   "name": "snuggles-audio-node",
   "version": "1.0.0",
   "description": "Dr. Snuggles - Local-First AI Audio Companion for Twitter Spaces",
-  "main": "dist/main/main2025.js",
+  "main": "dist/main/main/main2025.js",
   "type": "commonjs",
   "scripts": {
     "dev": "concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
