@@ -40,6 +40,47 @@ contextBridge.exposeInMainWorld('snugglesAPI', {
 
   onMessageReceived: (callback: (message: ConversationTurn) => void) => {
     ipcRenderer.on(IPC_CHANNELS.MESSAGE_RECEIVED, (_, message) => callback(message));
+  },
+
+  // ===== December 2025 Audio Streaming APIs =====
+
+  /**
+   * Start Gemini Live session with new SDK
+   * @param config - Session configuration (optional)
+   * @returns Promise<{ success: boolean; error?: string }>
+   */
+  genaiStartSession: (config?: any) =>
+    ipcRenderer.invoke(IPC_CHANNELS.GENAI_START_SESSION, config),
+
+  /**
+   * Send audio chunk to Gemini (48kHz Float32Array)
+   * Main process handles conversion to 16kHz PCM16 base64
+   * @param audioChunk - Float32Array audio data
+   * @returns Promise<number> - Latency in milliseconds
+   */
+  genaiSendAudioChunk: (audioChunk: Float32Array) =>
+    ipcRenderer.invoke(IPC_CHANNELS.GENAI_SEND_AUDIO_CHUNK, audioChunk),
+
+  /**
+   * Listen for audio received from Gemini (48kHz Float32Array)
+   * Main process handles conversion from 24kHz PCM16 base64
+   */
+  onGenaiAudioReceived: (callback: (audioData: Float32Array) => void) => {
+    ipcRenderer.on(IPC_CHANNELS.GENAI_AUDIO_RECEIVED, (_, audioData) => callback(audioData));
+  },
+
+  /**
+   * Listen for latency updates
+   */
+  onGenaiLatencyUpdate: (callback: (metrics: any) => void) => {
+    ipcRenderer.on(IPC_CHANNELS.GENAI_LATENCY_UPDATE, (_, metrics) => callback(metrics));
+  },
+
+  /**
+   * Listen for VAD state changes
+   */
+  onGenaiVADState: (callback: (state: any) => void) => {
+    ipcRenderer.on(IPC_CHANNELS.GENAI_VAD_STATE, (_, state) => callback(state));
   }
 });
 
@@ -60,6 +101,12 @@ declare global {
       onVolumeUpdate: (callback: (data: VolumeData) => void) => void;
       onConnectionStatus: (callback: (status: ConnectionStatus) => void) => void;
       onMessageReceived: (callback: (message: ConversationTurn) => void) => void;
+      // December 2025 Audio Streaming APIs
+      genaiStartSession: (config?: any) => Promise<{ success: boolean; error?: string }>;
+      genaiSendAudioChunk: (audioChunk: Float32Array) => Promise<number>;
+      onGenaiAudioReceived: (callback: (audioData: Float32Array) => void) => void;
+      onGenaiLatencyUpdate: (callback: (metrics: any) => void) => void;
+      onGenaiVADState: (callback: (state: any) => void) => void;
     };
   }
 }
