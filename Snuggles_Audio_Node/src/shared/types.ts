@@ -57,6 +57,65 @@ export interface RAGResult {
   relevance: number;
 }
 
+// === Enhanced Analytics Types ===
+
+export interface LiveAnalytics {
+  speakingTime: {
+    ai: number;      // percentage
+    user: number;    // percentage
+  };
+  totalResponses: number;
+  avgResponseTime: number; // seconds
+  interrupts: number;
+  jokeSuccessRate: number; // percentage
+  clipWorthyMoments: ClipMoment[];
+}
+
+export interface ClipMoment {
+  id: string;
+  timestamp: number;
+  title: string;
+  timeInSession: string; // formatted "HH:MM:SS"
+  snippet: string;
+}
+
+export interface KeyTopic {
+  topic: string;
+  mentions: number;
+  speaker: 'user' | 'assistant' | 'both';
+}
+
+export interface SpeakerNote {
+  speaker: string;
+  note: string;
+  timestamp: number;
+}
+
+export interface SessionMemory {
+  keyTopics: KeyTopic[];
+  speakerNotes: SpeakerNote[];
+  runningJokes: string[];
+}
+
+export interface PersonalityMix {
+  comedy: number;    // 0-100
+  research: number;  // 0-100
+  energy: number;    // 0-100
+}
+
+export interface AICohostStatus {
+  status: 'idle' | 'listening' | 'thinking' | 'speaking';
+  responseTime: number; // seconds
+  confidence: number;   // 0-100
+}
+
+export interface QuickCommand {
+  id: string;
+  label: string;
+  shortcut: string;
+  action: () => void;
+}
+
 // IPC Channel Names
 export const IPC_CHANNELS = {
   GET_AUDIO_DEVICES: 'get-audio-devices',
@@ -71,5 +130,10 @@ export const IPC_CHANNELS = {
   MESSAGE_RECEIVED: 'message-received',
   RESET_AGENT: 'reset-agent',
   SEARCH_KNOWLEDGE: 'search-knowledge',
-  LOAD_KNOWLEDGE: 'load-knowledge'
+  LOAD_KNOWLEDGE: 'load-knowledge',
+  // New channels for enhanced features
+  GET_ANALYTICS: 'get-analytics',
+  GET_SESSION_MEMORY: 'get-session-memory',
+  UPDATE_PERSONALITY: 'update-personality',
+  EXECUTE_QUICK_COMMAND: 'execute-quick-command'
 } as const;

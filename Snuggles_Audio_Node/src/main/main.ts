@@ -132,7 +132,7 @@ class SnugglesApp {
     });
   }
 
-  private async getRecentSummaries(count: number): Promise<string[]> {
+  private async getRecentSummaries(_count: number): Promise<string[]> {
     // TODO: Implement with Dexie.js in next phase
     return [];
   }

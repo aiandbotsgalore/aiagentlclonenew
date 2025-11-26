@@ -1,10 +1,10 @@
 import React from 'react';
-import Dashboard from './components/Dashboard';
+import ControlCenter from './components/ControlCenter';
 
 const App: React.FC = () => {
   return (
     <div className="app">
-      <Dashboard />
+      <ControlCenter />
     </div>
   );
 };
