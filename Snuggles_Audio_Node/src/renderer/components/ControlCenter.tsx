@@ -10,6 +10,8 @@ import { LiveAnalyticsPanel } from './panels/LiveAnalyticsPanel';
 import { AnalyticsService } from '../services/analyticsService';
 import { ClipDetectionService } from '../services/clipDetectionService';
 import { TranscriptExporter } from '../services/transcriptExporter';
+import { AudioCaptureService } from '../services/audioCaptureService';
+import { AudioPlaybackService } from '../services/audioPlaybackService';
 import './ControlCenter.css';
 
 /**
@@ -26,6 +28,9 @@ const ControlCenter: React.FC = () => {
   const analyticsService = useRef(new AnalyticsService());
   const clipDetectionService = useRef(new ClipDetectionService());
   const transcriptExporter = useRef(new TranscriptExporter());
+  const audioCaptureService = useRef(new AudioCaptureService());
+  const audioPlaybackService = useRef(new AudioPlaybackService());
+
   // Connection & Audio State
   const [status, setStatus] = useState<ConnectionStatus>({
     connected: false,
@@ -244,23 +249,45 @@ const ControlCenter: React.FC = () => {
   // Connection Handlers
   const handleConnect = async () => {
     try {
-      const result = await window.snugglesAPI.connect();
+      setStatus({ connected: false, connecting: true, error: null });
+
+      // Start audio services first
+      // Note: We'll update device ID if user selected one, for now default
+      await audioCaptureService.current.start();
+      audioPlaybackService.current.start();
+
+      // Connect to Gemini
+      // Using the new GENAI_START_SESSION for consistency with 2025 backend
+      const result = await window.snugglesAPI.genaiStartSession();
+
       if (!result.success) {
         setStatus({ connected: false, connecting: false, error: result.error || 'Connection failed' });
+        audioCaptureService.current.stop();
+        audioPlaybackService.current.stop();
       } else {
+        // Status update will come via IPC event listener (onConnectionStatus)
+        // but we set local state to feel responsive
+        setStatus({ connected: true, connecting: false, error: null });
+        setRecording(true);
         const newSessionTime = Date.now();
         setSessionStartTime(newSessionTime);
         // Reset analytics for new session
         analyticsService.current.reset();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('[ControlCenter] Connection error:', error);
+      setStatus({ connected: false, connecting: false, error: error.message || 'Connection error' });
+      audioCaptureService.current.stop();
+      audioPlaybackService.current.stop();
     }
   };
 
   const handleDisconnect = async () => {
     await window.snugglesAPI.disconnect();
+    audioCaptureService.current.stop();
+    audioPlaybackService.current.stop();
     setRecording(false);
+    setStatus({ connected: false, connecting: false, error: null });
   };
 
   const handlePlay = () => {

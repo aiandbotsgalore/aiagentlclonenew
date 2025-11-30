@@ -17,6 +17,7 @@ import fs from 'fs';
 import { GeminiLiveClient } from './llm/geminiLiveClient';
 import { AudioManager2025 } from './audio/audioManager2025';
 import { KnowledgeStore } from './knowledge/store';
+import { SessionMemoryService } from './memory/database';
 import { IPC_CHANNELS, AppConfig, LatencyMetrics } from '../shared/types';
 
 const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
@@ -34,6 +35,7 @@ class SnugglesApp2025 {
   private audioManager: AudioManager2025;
   private geminiLiveClient: GeminiLiveClient;
   private knowledgeStore: KnowledgeStore;
+  private sessionMemory: SessionMemoryService;
   private config: AppConfig;
   private latencyMetrics: LatencyMetrics[] = [];
 
@@ -48,6 +50,7 @@ class SnugglesApp2025 {
     this.audioManager = new AudioManager2025();
     this.geminiLiveClient = new GeminiLiveClient(API_KEY);
     this.knowledgeStore = new KnowledgeStore();
+    this.sessionMemory = new SessionMemoryService();
 
     this.setupIPC();
     this.setupGeminiEventHandlers();
@@ -298,12 +301,16 @@ class SnugglesApp2025 {
   /**
    * Retrieves recent session summaries.
    *
-   * @param {number} _count - The number of summaries to retrieve.
+   * @param {number} count - The number of summaries to retrieve.
    * @returns {Promise<string[]>} A promise resolving to an array of summaries.
    */
-  private async getRecentSummaries(_count: number): Promise<string[]> {
-    // TODO: Implement with Dexie.js
-    return [];
+  private async getRecentSummaries(count: number): Promise<string[]> {
+    try {
+      return await this.sessionMemory.getRecentSummaries(count);
+    } catch (error) {
+      console.error('[Main] Failed to retrieve summaries:', error);
+      return [];
+    }
   }
 
   /**
@@ -321,6 +328,7 @@ class SnugglesApp2025 {
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
+        sandbox: false, // Required to allow preload script to require relative files (like types.js)
         preload: path.join(__dirname, '../main/preload.js') // Correct path relative to main2025.js
       },
       title: 'Dr. Snuggles - Echosphere AI (Dec 2025)',
@@ -333,11 +341,30 @@ class SnugglesApp2025 {
 
     if (isDev) {
       console.log('[Main] Loading from Vite dev server: http://localhost:5173');
-      await this.mainWindow.loadURL('http://localhost:5173');
-      this.mainWindow.webContents.openDevTools();
+      // Retry logic for Vite dev server (Windows startup fix)
+      const loadWithRetry = async (retries = 5, delay = 2000) => {
+        try {
+          await this.mainWindow?.loadURL('http://localhost:5173');
+          this.mainWindow?.webContents.openDevTools();
+          console.log('[Main] ✅ Connected to Vite dev server');
+        } catch (err: any) {
+          if (retries > 0) {
+            console.log(`[Main] ⏳ Waiting for Vite dev server... (${retries} retries left)`);
+            setTimeout(() => loadWithRetry(retries - 1, delay), delay);
+          } else {
+            console.error('[Main] ❌ Failed to load Vite dev server:', err.message);
+          }
+        }
+      };
+
+      loadWithRetry();
     } else {
       console.log('[Main] Loading from built files');
-      await this.mainWindow.loadFile(path.join(__dirname, '../../renderer/index.html'));
+      try {
+        await this.mainWindow.loadFile(path.join(__dirname, '../../renderer/index.html'));
+      } catch (e: any) {
+        console.error('[Main] ❌ Failed to load built files:', e.message);
+      }
     }
 
     this.mainWindow.on('closed', () => {
