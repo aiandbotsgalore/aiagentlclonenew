@@ -1,11 +1,33 @@
 import React from 'react';
 
+/**
+ * Props for the Modal component.
+ */
 interface ModalProps {
+  /**
+   * The title of the modal.
+   */
   title: string;
+  /**
+   * Callback function to handle closing the modal.
+   */
   onClose: () => void;
+  /**
+   * The content to be displayed inside the modal.
+   */
   children: React.ReactNode;
 }
 
+/**
+ * A generic modal component.
+ *
+ * It provides a backdrop, a title bar with a close button, and a container for children.
+ * Clicking the backdrop closes the modal.
+ *
+ * @component
+ * @param {ModalProps} props - The component props.
+ * @returns {JSX.Element} The modal component.
+ */
 const Modal: React.FC<ModalProps> = ({ title, onClose, children }) => {
   return (
     <div 

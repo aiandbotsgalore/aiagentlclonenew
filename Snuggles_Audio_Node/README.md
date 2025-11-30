@@ -1,239 +1,81 @@
-# 🎙️ Echosphere AI - Dr. Snuggles Edition
+# Snuggles Audio Node
 
-**Local-First, Audio-Only AI Companion for Twitter Spaces**
+This is the Electron-based desktop application component of the Echosphere AI system. It serves as a powerful "Audio Node" designed to run locally on a host machine, facilitating high-fidelity, low-latency AI interactions for live broadcasts (like Twitter Spaces).
 
-Dr. Snuggles is a high-context, hyper-intelligent AI persona powered by Google Gemini Live API, designed for live audio interactions in Twitter Spaces. Built as an Electron desktop application with zero-cost architecture and local-first design.
+## Features
 
----
+*   **Native Audio Integration**: Integrates with system audio devices and virtual cables (like VoiceMeeter) for professional routing.
+*   **Gemini Live API Client**: Uses the latest Google Generative AI SDK for real-time, low-latency voice conversations.
+*   **Voice Activity Detection (VAD)**: Intelligent turn-taking logic to prevent interruptions and save bandwidth.
+*   **Local Knowledge Base (RAG)**: Ingests local documents (PDF, TXT) into an Orama vector database for context-aware responses.
+*   **Session Memory**: Persists conversation history and session summaries using Dexie.js.
+*   **Real-time Analytics**: Tracks response times, speaking ratios, and sentiment analysis.
 
-## 🌟 Features
+## Setup & Installation
 
-- **Audio-Only Architecture**: Headless audio node routing via VoiceMeeter
-- **Local RAG System**: 48GB RAM-optimized vector search with Orama
-- **Zero Cost**: Uses Google Gemini free tier + local compute
-- **Dr. Snuggles Persona**: Deep, authoritative "Charon" voice with scientific/esoteric personality
-- **Long-Term Memory**: Dexie.js-powered conversation history
-- **Sample Rate Conversion**: Automatic resampling for VoiceMeeter compatibility
+1.  **Prerequisites**:
+    *   Node.js (v18+)
+    *   Virtual Audio Cable / VoiceMeeter (recommended for routing audio to/from streaming software).
 
----
+2.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
 
-## 🚀 Quick Start
+3.  **Configuration**:
+    *   Ensure your `GEMINI_API_KEY` is set in the environment or `.env` file (if applicable for your setup, otherwise the app may prompt or use defaults).
 
-### Prerequisites
+## Development
 
-- **Node.js** 18+ and npm
-- **VoiceMeeter** installed and configured
-- **Google Gemini API Key** (free tier)
-- **Windows** (for VoiceMeeter support)
-
-### Installation
+To start the application in development mode:
 
 ```bash
-# Navigate to project directory
-cd Snuggles_Audio_Node
-
-# Install dependencies
-npm install
-
-# Set up environment
-# Edit .env and add your Gemini API key (already included)
-
-# Run development mode
 npm run dev
-
-# Build for production
-npm run build
-npm start
 ```
 
----
+This command uses `concurrently` to run:
+*   `dev:main`: Compiles the Electron main process (TypeScript) and starts Electron.
+*   `dev:renderer`: Starts the Vite dev server for the React UI.
 
-## 🏗️ Architecture
+## Building
 
-### Tech Stack
-
-- **Electron**: Desktop app framework
-- **React + TypeScript**: UI dashboard
-- **Google Gemini Live API**: AI model (WebSocket)
-- **Orama**: In-memory vector search (RAG)
-- **Dexie.js**: IndexedDB wrapper (conversation history)
-- **VoiceMeeter**: Audio routing to Twitter Spaces
-
-### Audio Pipeline
-
-```
-Microphone (48kHz)
-  → Downsample (24kHz)
-  → Gemini Live API
-  → Upsample (48kHz)
-  → VoiceMeeter Input
-  → Twitter Spaces
-```
-
-### Directory Structure
-
-```
-Snuggles_Audio_Node/
-├── src/
-│   ├── main/              # Electron main process
-│   │   ├── audio/         # Audio manager + resampler
-│   │   ├── llm/           # Gemini WebSocket client
-│   │   ├── knowledge/     # RAG system (Orama + PDF parser)
-│   │   ├── memory/        # Dexie.js conversation database
-│   │   ├── main.ts        # Entry point
-│   │   └── preload.ts     # IPC bridge
-│   ├── renderer/          # React UI
-│   │   ├── components/    # Dashboard components
-│   │   ├── App.tsx
-│   │   └── index.tsx
-│   └── shared/
-│       └── types.ts       # TypeScript types
-├── knowledge/             # Place PDF/TXT files here
-├── package.json
-└── README.md
-```
-
----
-
-## 📚 Knowledge Base
-
-Place your PDF and text files in the `/knowledge` directory. The app will automatically:
-
-1. Parse them on startup
-2. Index them with Orama vector search
-3. Save the index to disk for fast subsequent boots
-4. Inject relevant knowledge into Dr. Snuggles' context during conversations
-
-**Supported Formats:**
-- `.pdf` - Parsed with pdf-parse
-- `.txt` - Plain text files
-
----
-
-## 🎭 Dr. Snuggles Persona
-
-**Archetype**: Unholy hybrid of molecular biologist, esoteric scholar, and aggressive logician
-
-**Voice**: Charon (deep, authoritative, commanding)
-
-**Core Behavior**:
-- Asserts, deconstructs, and reveals (rarely asks questions)
-- Simulates running complex code/simulations verbally
-- Sarcastic, "biologically surgical" tone
-- Live Twitter Space conversational style
-
-**System Prompt**: Automatically injected with:
-- Current date/time awareness
-- Recent session summaries
-- Knowledge base context
-
----
-
-## 🎛️ VoiceMeeter Setup
-
-1. Install VoiceMeeter (Banana or Potato recommended)
-2. Configure inputs:
-   - **A1**: Your microphone
-   - **B1**: Virtual input for Dr. Snuggles output
-3. In Twitter Spaces:
-   - Select "VoiceMeeter Input (B1)" as your microphone
-4. In Dr. Snuggles Dashboard:
-   - **Input Device**: Your microphone or VoiceMeeter Out
-   - **Output Device**: VoiceMeeter Input
-
----
-
-## 🔧 Configuration
-
-### Audio Settings
-
-- **System Sample Rate**: 48kHz (VoiceMeeter standard)
-- **Gemini Sample Rate**: 24kHz (automatic conversion)
-- **Buffer Size**: 4096 samples
-
-### API Configuration
-
-- **Model**: `gemini-2.0-flash-exp`
-- **Voice**: `Charon` (hardcoded)
-- **Response Modality**: Audio only
-
-### Memory Management
-
-- **Conversation History**: Last 50 turns stored in IndexedDB
-- **Session Summaries**: Last 10 sessions
-- **Cleanup**: Auto-prune conversations older than 30 days
-
----
-
-## 🛠️ Development
-
-### Scripts
+To build the application for production:
 
 ```bash
-npm run dev          # Start dev server (main + renderer)
-npm run dev:main     # Build and run main process
-npm run dev:renderer # Start Vite dev server
-npm run build        # Build for production
-npm start            # Run production build
+npm run build
 ```
 
-### Key Files
+*   `build:main`: Compiles the main process code.
+*   `build:renderer`: Builds the React renderer assets.
 
-- `src/main/audio/resampler.ts` - **CRITICAL**: Sample rate conversion logic
-- `src/main/llm/geminiClient.ts` - Gemini WebSocket client + Dr. Snuggles prompt
-- `src/main/knowledge/store.ts` - Orama RAG system
-- `src/main/memory/database.ts` - Dexie.js conversation history
+## Directory Structure
 
----
+*   **`src/main`**: The Electron main process. Handles system resources, audio streams, and API connections.
+    *   `audio/`: Audio processing logic (resampling, VAD).
+    *   `llm/`: Clients for the Gemini API.
+    *   `knowledge/`: Vector database and document ingestion.
+    *   `memory/`: Database for conversation history.
+*   **`src/renderer`**: The React-based user interface.
+    *   `components/`: UI components (Panels, Visualizers).
+    *   `services/`: Frontend services for analytics and data handling.
+*   **`src/shared`**: Types and interfaces shared between main and renderer processes.
+*   **`src/lib`**: Shared utility libraries (e.g., optimized audio resampler).
 
-## 🐛 Troubleshooting
+## Audio Pipeline
 
-### Audio Issues
+1.  **Input**: Audio is captured from the selected input device (e.g., Microphone or VoiceMeeter Output).
+2.  **Processing**:
+    *   Renderer captures raw audio (48kHz Float32).
+    *   IPC sends audio chunks to Main process.
+    *   Main process uses `AudioResampler` to convert to 16kHz PCM16.
+    *   `VoiceActivityDetector` checks for speech.
+3.  **Transmission**: If speech is detected, audio is streamed to Gemini Live API via WebSocket.
+4.  **Output**:
+    *   Gemini returns 24kHz PCM16 audio.
+    *   Main process upsamples to 48kHz Float32.
+    *   Audio is sent to Renderer via IPC.
+    *   Renderer plays audio to the selected output device (e.g., Speakers or VoiceMeeter Input).
 
-- **No audio output**: Check VoiceMeeter routing and selected devices
-- **Pitch/speed problems**: Verify resampler is active (check console logs)
-- **Crackling audio**: Increase buffer size in `audioManager.ts`
+## License
 
-### Connection Issues
-
-- **WebSocket fails**: Verify API key in `.env`
-- **"403 Forbidden"**: Check Gemini API quota
-- **Reconnection loops**: Check network connectivity
-
-### Knowledge Base
-
-- **PDFs not parsing**: Ensure `pdf-parse` is installed
-- **Slow indexing**: Large PDFs are automatically chunked
-- **Missing context**: Check `knowledge/` directory and console logs
-
----
-
-## 📝 License
-
-MIT License - Free for personal and commercial use
-
----
-
-## 🙏 Credits
-
-- **AI Model**: Google Gemini 2.0 Flash (Live API)
-- **Voice**: Charon (Gemini prebuilt voice)
-- **Audio Routing**: VoiceMeeter by VB-Audio Software
-- **Vector Search**: Orama by Orama Inc.
-
----
-
-## 🚀 Roadmap
-
-- [ ] Multi-voice support (beyond Charon)
-- [ ] Real-time transcript export
-- [ ] Twitter Spaces API integration
-- [ ] Custom knowledge base UI
-- [ ] Session analytics dashboard
-- [ ] Multi-persona switching
-
----
-
-**Built with ❤️ for the AI community**
-
-*Dr. Snuggles - Because Twitter Spaces deserves better AI.*
+MIT

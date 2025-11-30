@@ -7,6 +7,15 @@ import ControlTray from './components/ControlTray';
 import UserSettings from './components/UserSettings';
 import AgentEdit from './components/AgentEdit';
 
+/**
+ * The main application component.
+ *
+ * This component sets up the `LiveAPIProvider` context and the main layout of the application.
+ * It conditionally renders the `UserSettings` and `AgentEdit` modals based on the UI store state.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered application component.
+ */
 const App: React.FC = () => {
     const { showUserConfig, showAgentEdit } = useUIStore();
 

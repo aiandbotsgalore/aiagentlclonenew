@@ -3,12 +3,15 @@ import { ConversationTurn, SessionSummary } from '../../shared/types';
 
 /**
  * SnugglesDB - Dexie database for Dr. Snuggles memory
- * Stores conversation history and session summaries
+ * Stores conversation history and session summaries.
  */
 class SnugglesDB extends Dexie {
   conversations!: Table<ConversationTurn, string>;
   sessions!: Table<SessionSummary, string>;
 
+  /**
+   * Initializes the database schema.
+   */
   constructor() {
     super('SnugglesDB');
 
@@ -19,14 +22,17 @@ class SnugglesDB extends Dexie {
   }
 
   /**
-   * Add a conversation turn
+   * Add a conversation turn.
+   * @param {ConversationTurn} turn - The conversation turn to add.
    */
   async addTurn(turn: ConversationTurn): Promise<void> {
     await this.conversations.add(turn);
   }
 
   /**
-   * Get recent conversation turns
+   * Get recent conversation turns.
+   * @param {number} [limit=50] - Max number of turns to retrieve.
+   * @returns {Promise<ConversationTurn[]>} List of recent turns.
    */
   async getRecentTurns(limit: number = 50): Promise<ConversationTurn[]> {
     return await this.conversations
@@ -37,14 +43,17 @@ class SnugglesDB extends Dexie {
   }
 
   /**
-   * Add a session summary
+   * Add a session summary.
+   * @param {SessionSummary} summary - The session summary to add.
    */
   async addSession(summary: SessionSummary): Promise<void> {
     await this.sessions.add(summary);
   }
 
   /**
-   * Get recent session summaries
+   * Get recent session summaries.
+   * @param {number} [limit=10] - Max number of summaries to retrieve.
+   * @returns {Promise<SessionSummary[]>} List of recent session summaries.
    */
   async getRecentSessions(limit: number = 10): Promise<SessionSummary[]> {
     return await this.sessions
@@ -55,7 +64,8 @@ class SnugglesDB extends Dexie {
   }
 
   /**
-   * Clear old conversation turns (keep last N days)
+   * Clear old conversation turns (keep last N days).
+   * @param {number} [daysToKeep=30] - Number of days of history to keep.
    */
   async pruneOldConversations(daysToKeep: number = 30): Promise<void> {
     const cutoffTime = Date.now() - (daysToKeep * 24 * 60 * 60 * 1000);
@@ -63,7 +73,8 @@ class SnugglesDB extends Dexie {
   }
 
   /**
-   * Get conversation statistics
+   * Get conversation statistics.
+   * @returns {Promise<object>} Statistics including total turns, sessions, and date ranges.
    */
   async getStats(): Promise<{
     totalTurns: number;
@@ -87,7 +98,10 @@ class SnugglesDB extends Dexie {
   }
 
   /**
-   * Create a session summary from recent turns
+   * Create a session summary from recent turns.
+   * @param {number} turnCount - Number of turns in the session.
+   * @param {string} summaryText - The summary text.
+   * @returns {Promise<SessionSummary>} The created session summary.
    */
   async createSessionSummary(turnCount: number, summaryText: string): Promise<SessionSummary> {
     const summary: SessionSummary = {
@@ -107,17 +121,22 @@ export const db = new SnugglesDB();
 
 /**
  * Memory Manager
- * High-level interface for conversation memory
+ * High-level interface for conversation memory operations.
  */
 export class MemoryManager {
   private db: SnugglesDB;
 
+  /**
+   * Initializes the MemoryManager with the singleton database instance.
+   */
   constructor() {
     this.db = db;
   }
 
   /**
-   * Record a conversation turn
+   * Record a conversation turn.
+   * @param {'user' | 'assistant'} role - The speaker's role.
+   * @param {string} text - The spoken text.
    */
   async recordTurn(role: 'user' | 'assistant', text: string): Promise<void> {
     const turn: ConversationTurn = {
@@ -132,7 +151,11 @@ export class MemoryManager {
   }
 
   /**
-   * Get recent conversation context for RAG
+   * Get recent conversation context for RAG.
+   * Formats recent turns into a readable string for the LLM.
+   *
+   * @param {number} [limit=10] - Number of turns to include.
+   * @returns {Promise<string>} Formatted conversation context.
    */
   async getRecentContext(limit: number = 10): Promise<string> {
     const turns = await this.db.getRecentTurns(limit);
@@ -152,7 +175,9 @@ export class MemoryManager {
   }
 
   /**
-   * Get session summaries for context
+   * Get session summaries for context.
+   * @param {number} [limit=3] - Number of summaries to retrieve.
+   * @returns {Promise<string[]>} Array of summary texts.
    */
   async getSessionSummaries(limit: number = 3): Promise<string[]> {
     const sessions = await this.db.getRecentSessions(limit);
@@ -160,7 +185,8 @@ export class MemoryManager {
   }
 
   /**
-   * End current session and create summary
+   * End current session and create summary.
+   * @param {string} summaryText - Summary of the ended session.
    */
   async endSession(summaryText: string): Promise<void> {
     const turns = await this.db.getRecentTurns();
@@ -169,14 +195,15 @@ export class MemoryManager {
   }
 
   /**
-   * Get memory statistics
+   * Get memory statistics.
    */
   async getStats() {
     return await this.db.getStats();
   }
 
   /**
-   * Clean up old data
+   * Clean up old data.
+   * @param {number} [daysToKeep=30] - Number of days to keep data.
    */
   async cleanup(daysToKeep: number = 30): Promise<void> {
     await this.db.pruneOldConversations(daysToKeep);

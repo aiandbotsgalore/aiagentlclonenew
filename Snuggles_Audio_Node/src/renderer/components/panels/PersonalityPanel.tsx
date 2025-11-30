@@ -2,11 +2,30 @@ import React, { useState, useRef, useEffect } from 'react';
 import { PersonalityMix } from '../../../shared/types';
 import { VoicePreviewService } from '../../services/voicePreviewService';
 
+/**
+ * Props for the PersonalityPanel component.
+ */
 interface PersonalityPanelProps {
+  /**
+   * The current personality mix configuration.
+   */
   personality: PersonalityMix;
+  /**
+   * Callback to update the personality mix.
+   */
   onPersonalityChange: (personality: PersonalityMix) => void;
 }
 
+/**
+ * Panel for configuring the AI's personality and voice.
+ *
+ * Allows adjusting sliders for comedy, research focus, and energy level.
+ * Provides voice selection and preview, as well as a toggle for response style.
+ *
+ * @component
+ * @param {PersonalityPanelProps} props - The component props.
+ * @returns {JSX.Element} The personality panel.
+ */
 export const PersonalityPanel: React.FC<PersonalityPanelProps> = ({
   personality,
   onPersonalityChange
@@ -16,6 +35,11 @@ export const PersonalityPanel: React.FC<PersonalityPanelProps> = ({
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
   const voicePreviewService = useRef(new VoicePreviewService());
 
+  /**
+   * Updates a specific personality trait.
+   * @param {keyof PersonalityMix} key - The trait key.
+   * @param {number} value - The new value (0-100).
+   */
   const handleSliderChange = (key: keyof PersonalityMix, value: number) => {
     onPersonalityChange({
       ...personality,
@@ -23,6 +47,9 @@ export const PersonalityPanel: React.FC<PersonalityPanelProps> = ({
     });
   };
 
+  /**
+   * Toggles the voice preview audio.
+   */
   const handlePreviewVoice = async () => {
     if (isPreviewPlaying) {
       voicePreviewService.current.stop();

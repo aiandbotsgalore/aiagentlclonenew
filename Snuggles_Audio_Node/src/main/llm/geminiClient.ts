@@ -47,6 +47,12 @@ You are **Dr. Snuggles**, an unholy hybrid of molecular biologist, diverse esote
 Your voice is **Charon** - deep, resonant, and commanding authority.
 `;
 
+/**
+ * Client for interacting with the Google Generative AI Gemini Live API via WebSocket.
+ *
+ * It manages the connection, session setup, message sending (text/audio), and
+ * handling of responses (audio/text).
+ */
 export class GeminiClient extends EventEmitter<GeminiClientEvents> {
   private ws: WebSocket | null = null;
   private apiKey: string;
@@ -55,6 +61,12 @@ export class GeminiClient extends EventEmitter<GeminiClientEvents> {
   private connecting: boolean = false;
   private conversationHistory: ConversationTurn[] = [];
 
+  /**
+   * Initializes the GeminiClient.
+   *
+   * @param {string} apiKey - The API key for Gemini.
+   * @param {AudioManager} audioManager - The audio manager for processing streams.
+   */
   constructor(apiKey: string, audioManager: AudioManager) {
     super();
     this.apiKey = apiKey;
@@ -65,7 +77,12 @@ export class GeminiClient extends EventEmitter<GeminiClientEvents> {
   }
 
   /**
-   * Connect to Gemini Live API
+   * Connect to Gemini Live API.
+   * Establishes a WebSocket connection and sends the initial setup message.
+   *
+   * @param {string[]} [sessionSummaries=[]] - Summaries of previous sessions to include in context.
+   * @param {string} [knowledgeContext=''] - Relevant knowledge base content.
+   * @returns {Promise<void>}
    */
   public async connect(
     sessionSummaries: string[] = [],
@@ -102,7 +119,10 @@ export class GeminiClient extends EventEmitter<GeminiClientEvents> {
   }
 
   /**
-   * Disconnect from Gemini
+   * Disconnect from Gemini.
+   * Closes the WebSocket connection.
+   *
+   * @returns {Promise<void>}
    */
   public async disconnect(): Promise<void> {
     if (this.ws) {
@@ -118,7 +138,11 @@ export class GeminiClient extends EventEmitter<GeminiClientEvents> {
   }
 
   /**
-   * Send text message to Gemini
+   * Send text message to Gemini.
+   *
+   * @param {string} text - The text content to send.
+   * @returns {Promise<void>}
+   * @throws {Error} If not connected.
    */
   public async sendText(text: string): Promise<void> {
     if (!this.connected || !this.ws) {
@@ -139,8 +163,10 @@ export class GeminiClient extends EventEmitter<GeminiClientEvents> {
   }
 
   /**
-   * Send audio chunk to Gemini
-   * Note: Currently called from text fallback, will be extended for audio streaming
+   * Send audio chunk to Gemini.
+   * Converts the buffer to Base64 and wraps it in the expected JSON format.
+   *
+   * @param {Buffer} buffer - The PCM audio buffer.
    */
   public sendAudio(buffer: Buffer): void {
     if (!this.connected || !this.ws) {
@@ -160,7 +186,10 @@ export class GeminiClient extends EventEmitter<GeminiClientEvents> {
   }
 
   /**
-   * WebSocket opened - send setup message
+   * Handle WebSocket open event.
+   * Sends the setup message with model configuration and system instructions.
+   *
+   * @param {string} systemInstruction - The constructed system instruction.
    */
   private onOpen(systemInstruction: string): void {
     if (!this.ws) return;
@@ -193,7 +222,10 @@ export class GeminiClient extends EventEmitter<GeminiClientEvents> {
   }
 
   /**
-   * Receive message from Gemini
+   * Handle incoming WebSocket messages.
+   * Processes audio responses and text transcriptions.
+   *
+   * @param {WebSocket.Data} data - The received data.
    */
   private onMessage(data: WebSocket.Data): void {
     try {
@@ -243,7 +275,11 @@ export class GeminiClient extends EventEmitter<GeminiClientEvents> {
   }
 
   /**
-   * WebSocket closed
+   * Handle WebSocket close event.
+   * Updates connection status.
+   *
+   * @param {number} code - The close code.
+   * @param {string} reason - The reason for closing.
    */
   private onClose(code: number, reason: string): void {
     this.connected = false;
@@ -259,7 +295,9 @@ export class GeminiClient extends EventEmitter<GeminiClientEvents> {
   }
 
   /**
-   * WebSocket error
+   * Handle WebSocket error event.
+   *
+   * @param {Error} error - The error object.
    */
   private onError(error: Error): void {
     console.error('[GeminiClient] WebSocket error:', error);
@@ -274,7 +312,12 @@ export class GeminiClient extends EventEmitter<GeminiClientEvents> {
   }
 
   /**
-   * Build system instruction with dynamic context
+   * Build system instruction with dynamic context.
+   * Incorporates current time, session history, and knowledge base content.
+   *
+   * @param {string[]} sessionSummaries - List of previous session summaries.
+   * @param {string} knowledgeContext - Relevant knowledge context.
+   * @returns {string} The complete system instruction.
    */
   private buildSystemInstruction(
     sessionSummaries: string[],
@@ -308,21 +351,25 @@ export class GeminiClient extends EventEmitter<GeminiClientEvents> {
   }
 
   /**
-   * Emit status change event
+   * Emit status change event.
+   *
+   * @param {ConnectionStatus} status - The new connection status.
    */
   private emitStatus(status: ConnectionStatus): void {
     this.emit('statusChange', status);
   }
 
   /**
-   * Check if connected
+   * Check if connected.
+   * @returns {boolean} True if connected.
    */
   public isConnected(): boolean {
     return this.connected;
   }
 
   /**
-   * Get conversation history
+   * Get conversation history.
+   * @returns {ConversationTurn[]} Array of conversation turns.
    */
   public getHistory(): ConversationTurn[] {
     return [...this.conversationHistory];

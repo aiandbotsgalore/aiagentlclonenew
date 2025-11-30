@@ -2,19 +2,29 @@ import Sentiment from 'sentiment';
 import { ConversationTurn, ClipMoment } from '../../shared/types';
 
 /**
- * ClipDetectionService - ML-based sentiment analysis for clip-worthy moments
+ * Service for analyzing conversation turns to identify clip-worthy moments based on sentiment, engagement, and quotability.
  */
 export class ClipDetectionService {
   private sentiment: Sentiment;
   private readonly CLIP_THRESHOLD = 3; // Sentiment score threshold
   private readonly MIN_LENGTH = 100; // Minimum message length for clips
 
+  /**
+   * Initializes the clip detection service.
+   */
   constructor() {
     this.sentiment = new Sentiment();
   }
 
   /**
-   * Analyze message for clip-worthiness using multiple factors
+   * Analyzes a single message for clip-worthiness.
+   *
+   * Evaluates sentiment, engagement, and quotability scores.
+   * If the combined score meets the threshold, returns a ClipMoment object.
+   *
+   * @param {ConversationTurn} message - The message to analyze.
+   * @param {number} sessionStartTime - The start time of the session.
+   * @returns {ClipMoment | null} A ClipMoment if the message is clip-worthy, otherwise null.
    */
   public analyzeMessage(message: ConversationTurn, sessionStartTime: number): ClipMoment | null {
     // Only analyze AI responses
@@ -55,7 +65,10 @@ export class ClipDetectionService {
   }
 
   /**
-   * Calculate engagement score based on content characteristics
+   * Calculates engagement score based on content characteristics (questions, exclamations, etc.).
+   *
+   * @param {string} text - The message text.
+   * @returns {number} The calculated engagement score.
    */
   private calculateEngagementScore(text: string): number {
     let score = 0;
@@ -86,7 +99,10 @@ export class ClipDetectionService {
   }
 
   /**
-   * Calculate quotability score (how likely to be shared)
+   * Calculates quotability score based on sentence structure and rhetorical devices.
+   *
+   * @param {string} text - The message text.
+   * @returns {number} The calculated quotability score.
    */
   private calculateQuotabilityScore(text: string): number {
     let score = 0;
@@ -118,7 +134,10 @@ export class ClipDetectionService {
   }
 
   /**
-   * Extract a concise title from the message
+   * Extracts a concise title from the message text.
+   *
+   * @param {string} text - The message text.
+   * @returns {string} The extracted title.
    */
   private extractTitle(text: string): string {
     // Get first sentence or up to 50 characters
@@ -128,7 +147,10 @@ export class ClipDetectionService {
   }
 
   /**
-   * Format time in session as HH:MM:SS
+   * Formats a duration in milliseconds to HH:MM:SS string.
+   *
+   * @param {number} ms - The duration in milliseconds.
+   * @returns {string} The formatted time string.
    */
   private formatTime(ms: number): string {
     const seconds = Math.floor(ms / 1000);
@@ -139,7 +161,12 @@ export class ClipDetectionService {
   }
 
   /**
-   * Analyze multiple messages and return top clips
+   * Analyzes multiple messages and returns the top clips.
+   *
+   * @param {ConversationTurn[]} messages - The list of messages.
+   * @param {number} sessionStartTime - The session start time.
+   * @param {number} [limit=5] - Maximum number of clips to return.
+   * @returns {ClipMoment[]} List of clip-worthy moments.
    */
   public detectClips(messages: ConversationTurn[], sessionStartTime: number, limit: number = 5): ClipMoment[] {
     const clips: ClipMoment[] = [];
@@ -158,7 +185,10 @@ export class ClipDetectionService {
   }
 
   /**
-   * Get sentiment breakdown for session
+   * Gets the overall sentiment breakdown for a session.
+   *
+   * @param {ConversationTurn[]} messages - The list of messages.
+   * @returns {object} Sentiment statistics (positive, negative, neutral counts and overall tone).
    */
   public getSessionSentiment(messages: ConversationTurn[]) {
     let positive = 0;

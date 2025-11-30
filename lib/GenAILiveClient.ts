@@ -4,6 +4,12 @@ import { Agent } from '../types';
 
 const MODEL = 'models/gemini-2.0-flash-live-001';
 
+/**
+ * Converts a Base64 string to an ArrayBuffer.
+ *
+ * @param {string} base64 - The Base64 encoded string.
+ * @returns {ArrayBuffer} The ArrayBuffer containing the binary data.
+ */
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
   const binaryString = atob(base64);
   const len = binaryString.length;
@@ -14,19 +20,46 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-// Fix: Added event types for EventEmitter to resolve type errors
+/**
+ * Events emitted by the GenAILiveClient.
+ */
 type LiveClientEvents = {
+  /**
+   * Emitted when the connection is established.
+   */
   open: () => void;
+  /**
+   * Emitted when the connection is closed.
+   */
   close: () => void;
+  /**
+   * Emitted when an error occurs.
+   * @param {Error} error - The error object.
+   */
   error: (error: Error) => void;
+  /**
+   * Emitted when audio data is received from the model.
+   * @param {ArrayBuffer} buffer - The received audio data.
+   */
   audio: (buffer: ArrayBuffer) => void;
 };
 
+/**
+ * Client for interacting with the Google Generative AI Live API.
+ *
+ * It manages the WebSocket connection, sends input (audio/text) to the model,
+ * and handles real-time responses.
+ */
 export class GenAILiveClient extends EventEmitter<LiveClientEvents> {
   private ai: GoogleGenAI;
   // Note: Using 'any' because 'LiveSession' type is not exported by @google/genai
   private session: any | null = null;
 
+  /**
+   * Initializes the GenAI client.
+   *
+   * @throws {Error} If the GEMINI_API_KEY environment variable is not set.
+   */
   constructor() {
     super();
     const apiKey = process.env.GEMINI_API_KEY;
@@ -40,16 +73,38 @@ export class GenAILiveClient extends EventEmitter<LiveClientEvents> {
     this.ai = new GoogleGenAI({ apiKey });
   }
 
+  /**
+   * Checks if a response part contains audio data.
+   *
+   * @private
+   * @param {any} part - The response part to check.
+   * @returns {boolean} True if the part is audio, false otherwise.
+   */
   private isAudioPart(part: any): boolean {
     return part?.inlineData?.mimeType?.startsWith('audio/') && part.inlineData.data;
   }
 
+  /**
+   * Handles an audio response part.
+   *
+   * Decodes the Base64 audio data and emits an 'audio' event.
+   *
+   * @private
+   * @param {any} part - The audio response part.
+   */
   private handleAudioPart(part: any): void {
     console.log('Got audio response, size:', part.inlineData.data.length);
     const audioBuffer = base64ToArrayBuffer(part.inlineData.data);
     this.emit('audio', audioBuffer);
   }
 
+  /**
+   * Normalizes an error object into a standard Error instance.
+   *
+   * @private
+   * @param {ErrorEvent | Error | unknown} e - The raw error.
+   * @returns {Error} The normalized Error object.
+   */
   private normalizeError(e: ErrorEvent | Error | unknown): Error {
     if (e instanceof Error) {
       return e;
@@ -63,8 +118,13 @@ export class GenAILiveClient extends EventEmitter<LiveClientEvents> {
     return new Error(String(e) || 'Unknown error');
   }
 
-  // Fix: Refactored connect method to use the 'callbacks' parameter as required by the new API.
-  // This resolves the missing 'callbacks' property error and fixes the context for 'emit' calls.
+  /**
+   * Connects to the Live API session.
+   *
+   * @param {Agent} agent - The agent configuration (name, personality, voice).
+   * @param {{ name: string; info: string }} user - The user information.
+   * @returns {Promise<void>}
+   */
   async connect(agent: Agent, user: { name: string; info: string }) {
     if (this.session) {
       console.warn('Session already active.');
@@ -136,10 +196,18 @@ export class GenAILiveClient extends EventEmitter<LiveClientEvents> {
     }
   }
 
+  /**
+   * Disconnects from the current session.
+   */
   disconnect() {
     this.session?.close();
   }
 
+  /**
+   * Sends an initial text message to the model.
+   *
+   * @param {string} text - The text to send.
+   */
   sendInitialText(text: string) {
     if (!this.session) return;
     // Fix: Use the correct Live API method sendClientContent with proper format
@@ -149,6 +217,12 @@ export class GenAILiveClient extends EventEmitter<LiveClientEvents> {
     });
   }
 
+  /**
+   * Sends real-time audio input to the model.
+   *
+   * @param {string} audioBase64 - The Base64 encoded audio data.
+   * @param {string} mimeType - The MIME type of the audio data.
+   */
   sendRealtimeInput(audioBase64: string, mimeType: string) {
     if (!this.session) {
       console.warn('Cannot send audio - session not connected');
@@ -165,6 +239,10 @@ export class GenAILiveClient extends EventEmitter<LiveClientEvents> {
     }
   }
 
+  /**
+   * Checks if the client is currently connected.
+   * @returns {boolean} True if connected, false otherwise.
+   */
   get isConnected(): boolean {
     return !!this.session;
   }

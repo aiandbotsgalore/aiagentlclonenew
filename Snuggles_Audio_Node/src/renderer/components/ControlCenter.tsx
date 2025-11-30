@@ -12,6 +12,15 @@ import { ClipDetectionService } from '../services/clipDetectionService';
 import { TranscriptExporter } from '../services/transcriptExporter';
 import './ControlCenter.css';
 
+/**
+ * The main control center component for the renderer application.
+ *
+ * It manages the state for connection, audio, conversation, analytics, and personality settings.
+ * It coordinates the various panels (Audio Input, AI Cohost, Transcript, etc.) and handles user interactions.
+ *
+ * @component
+ * @returns {JSX.Element} The control center UI.
+ */
 const ControlCenter: React.FC = () => {
   // Services
   const analyticsService = useRef(new AnalyticsService());
@@ -68,6 +77,9 @@ const ControlCenter: React.FC = () => {
     setupKeyboardShortcuts();
   }, []);
 
+  /**
+   * Loads the initial status of the application.
+   */
   const loadInitialState = async () => {
     try {
       const st = await window.snugglesAPI.getStatus();
@@ -78,6 +90,9 @@ const ControlCenter: React.FC = () => {
     }
   };
 
+  /**
+   * Sets up event listeners for updates from the main process.
+   */
   const setupEventListeners = () => {
     window.snugglesAPI.onVolumeUpdate((data) => {
       setVolume(data);
@@ -112,6 +127,9 @@ const ControlCenter: React.FC = () => {
     });
   };
 
+  /**
+   * Sets up global keyboard shortcuts for quick actions.
+   */
   const setupKeyboardShortcuts = () => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
@@ -140,6 +158,10 @@ const ControlCenter: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyPress);
   };
 
+  /**
+   * Updates the AI cohost status display.
+   * @param {AICohostStatus['status']} newStatus - The new status.
+   */
   const updateCohostStatus = (newStatus: AICohostStatus['status']) => {
     const responseTime = newStatus === 'speaking' ? Math.random() * 2 + 0.8 : cohostStatus.responseTime;
     setCohostStatus(prev => ({
@@ -150,8 +172,10 @@ const ControlCenter: React.FC = () => {
     }));
   };
 
-  // Remove the old updateAnalytics function - now handled by analyticsService
-
+  /**
+   * Extracts key topics from a new message.
+   * @param {ConversationTurn} message - The new message.
+   */
   const extractSessionInsights = (message: ConversationTurn) => {
     // Simple keyword extraction for topics
     const keywords = ['AI', 'Technology', 'Twitter Spaces', 'Voice Technology', 'Dr. Snuggles'];
@@ -183,6 +207,11 @@ const ControlCenter: React.FC = () => {
     }
   };
 
+  /**
+   * Formats the session duration into HH:MM:SS.
+   * @param {number} ms - Duration in milliseconds.
+   * @returns {string} Formatted time string.
+   */
   const formatSessionTime = (ms: number): string => {
     const seconds = Math.floor(ms / 1000);
     const hours = Math.floor(seconds / 3600);

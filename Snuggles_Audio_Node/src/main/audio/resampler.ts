@@ -7,12 +7,21 @@
  * Without proper resampling, audio will have pitch/speed issues!
  */
 
+/**
+ * Handles resampling of audio data between different sample rates and bit depths.
+ */
 export class AudioResampler {
   private sourceRate: number;
   private targetRate: number;
   private ratio: number;
   private lastSample: number = 0;
 
+  /**
+   * Initializes the AudioResampler.
+   *
+   * @param {number} sourceRate - The input sample rate (e.g., 48000).
+   * @param {number} targetRate - The output sample rate (e.g., 24000).
+   */
   constructor(sourceRate: number, targetRate: number) {
     this.sourceRate = sourceRate;
     this.targetRate = targetRate;
@@ -23,7 +32,10 @@ export class AudioResampler {
 
   /**
    * Downsample: Convert high sample rate to lower (e.g., 48kHz → 24kHz)
-   * Used for microphone input before sending to Gemini
+   * Used for microphone input before sending to Gemini.
+   *
+   * @param {Float32Array} inputBuffer - The input audio buffer.
+   * @returns {Float32Array} The downsampled audio buffer.
    */
   public downsample(inputBuffer: Float32Array): Float32Array {
     if (this.sourceRate === this.targetRate) {
@@ -49,7 +61,11 @@ export class AudioResampler {
 
   /**
    * Upsample: Convert low sample rate to higher (e.g., 24kHz → 48kHz)
-   * Used for Gemini output before playing through VoiceMeeter
+   * Used for Gemini output before playing through VoiceMeeter.
+   * Maintains state (lastSample) for continuity between buffers.
+   *
+   * @param {Float32Array} inputBuffer - The input audio buffer.
+   * @returns {Float32Array} The upsampled audio buffer.
    */
   public upsample(inputBuffer: Float32Array): Float32Array {
     if (this.sourceRate === this.targetRate) {
@@ -81,7 +97,11 @@ export class AudioResampler {
   }
 
   /**
-   * Convert Float32 PCM to Int16 PCM (required by Gemini API)
+   * Convert Float32 PCM to Int16 PCM (required by Gemini API).
+   * Clamps values to [-1, 1] range.
+   *
+   * @param {Float32Array} float32Array - The float audio data.
+   * @returns {Int16Array} The 16-bit integer audio data.
    */
   public float32ToInt16(float32Array: Float32Array): Int16Array {
     const int16Array = new Int16Array(float32Array.length);
@@ -96,7 +116,10 @@ export class AudioResampler {
   }
 
   /**
-   * Convert Int16 PCM to Float32 PCM (for audio playback)
+   * Convert Int16 PCM to Float32 PCM (for audio playback).
+   *
+   * @param {Int16Array} int16Array - The 16-bit integer audio data.
+   * @returns {Float32Array} The float audio data.
    */
   public int16ToFloat32(int16Array: Int16Array): Float32Array {
     const float32Array = new Float32Array(int16Array.length);
@@ -109,7 +132,11 @@ export class AudioResampler {
   }
 
   /**
-   * Complete pipeline: System Audio → Gemini-ready PCM16
+   * Complete pipeline: System Audio → Gemini-ready PCM16.
+   * Downsamples and converts to Int16 Buffer.
+   *
+   * @param {Float32Array} systemAudio - Input audio (e.g., 48kHz).
+   * @returns {Buffer} Gemini-compatible audio buffer (e.g., 24kHz Int16).
    */
   public prepareForGemini(systemAudio: Float32Array): Buffer {
     const downsampled = this.downsample(systemAudio);
@@ -118,7 +145,11 @@ export class AudioResampler {
   }
 
   /**
-   * Complete pipeline: Gemini PCM16 → System-ready Audio
+   * Complete pipeline: Gemini PCM16 → System-ready Audio.
+   * Converts from Buffer/Int16 to Float32 and upsamples.
+   *
+   * @param {Buffer} geminiPCM - Input audio from Gemini (e.g., 24kHz Int16).
+   * @returns {Float32Array} System-compatible audio buffer (e.g., 48kHz Float32).
    */
   public prepareForPlayback(geminiPCM: Buffer): Float32Array {
     const int16 = new Int16Array(geminiPCM.buffer, geminiPCM.byteOffset, geminiPCM.length / 2);
@@ -127,14 +158,26 @@ export class AudioResampler {
     return upsampled;
   }
 
+  /**
+   * Get the source sample rate.
+   * @returns {number} Source rate in Hz.
+   */
   public getSourceRate(): number {
     return this.sourceRate;
   }
 
+  /**
+   * Get the target sample rate.
+   * @returns {number} Target rate in Hz.
+   */
   public getTargetRate(): number {
     return this.targetRate;
   }
 
+  /**
+   * Get the resampling ratio.
+   * @returns {number} Ratio of target rate to source rate.
+   */
   public getRatio(): number {
     return this.ratio;
   }

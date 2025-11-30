@@ -2,6 +2,15 @@ import React from 'react';
 import { useAgentStore } from '../stores/useAgent';
 import { useUIStore } from '../stores/useUI';
 
+/**
+ * The application header component.
+ *
+ * It displays the current agent's name and color, allows switching between agents,
+ * and provides buttons to open the agent settings and user configuration modals.
+ *
+ * @component
+ * @returns {JSX.Element} The header component.
+ */
 const Header: React.FC = () => {
   const { current, availablePresets, setCurrent } = useAgentStore();
   const { setShowUserConfig, setShowAgentEdit } = useUIStore();

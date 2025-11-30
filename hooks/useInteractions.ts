@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 
-export const useHover = (ref: React.RefObject<HTMLElement>) => {
+/**
+ * Hook that tracks whether an element is being hovered over.
+ *
+ * @param {React.RefObject<HTMLElement>} ref - The ref of the element to track.
+ * @returns {boolean} True if the element is being hovered, false otherwise.
+ */
+export const useHover = (ref: React.RefObject<HTMLElement>): boolean => {
   const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
@@ -22,7 +28,13 @@ export const useHover = (ref: React.RefObject<HTMLElement>) => {
   return isHovering;
 };
 
-export const useTilt = (ref: React.RefObject<HTMLElement>) => {
+/**
+ * Hook that calculates tilt effect values based on mouse position over an element.
+ *
+ * @param {React.RefObject<HTMLElement>} ref - The ref of the element to track.
+ * @returns {{ x: number, y: number }} The tilt values for x and y axes.
+ */
+export const useTilt = (ref: React.RefObject<HTMLElement>): { x: number; y: number } => {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
 
   useEffect(() => {

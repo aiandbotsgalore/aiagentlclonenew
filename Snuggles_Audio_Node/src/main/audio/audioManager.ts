@@ -12,10 +12,11 @@ const SYSTEM_SAMPLE_RATE = 48000; // VoiceMeeter typical rate
 const GEMINI_SAMPLE_RATE = 24000;  // Gemini Live API rate
 
 /**
- * AudioManager handles audio processing for Dr. Snuggles (Main Process)
+ * AudioManager handles audio processing for Dr. Snuggles (Main Process).
  *
- * NOTE: In Electron, actual audio capture must happen in renderer process.
- * This manager handles device configuration and audio resampling only.
+ * NOTE: In Electron, actual audio capture must happen in the renderer process.
+ * This manager handles device configuration, audio resampling, and volume monitoring
+ * primarily for the legacy audio flow.
  *
  * Flow:
  * 1. Renderer captures mic input (48kHz) → IPC to Main
@@ -34,6 +35,10 @@ export class AudioManager extends EventEmitter<AudioManagerEvents> {
   private lastVolumeUpdate: number = 0;
   private readonly VOLUME_UPDATE_INTERVAL = 100; // ms
 
+  /**
+   * Initializes the AudioManager.
+   * Sets up resamplers for converting between system (48kHz) and Gemini (24kHz) sample rates.
+   */
   constructor() {
     super();
 
@@ -45,8 +50,11 @@ export class AudioManager extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Get available audio devices
-   * NOTE: Must be called from renderer via IPC (browser context)
+   * Get available audio devices.
+   * NOTE: In the main process, this returns a placeholder list.
+   * The actual device list must be retrieved in the renderer process via IPC.
+   *
+   * @returns {Promise<AudioDevice[]>} Placeholder list of audio devices.
    */
   public async getDevices(): Promise<AudioDevice[]> {
     // Placeholder - renderer will provide actual device list
@@ -59,28 +67,37 @@ export class AudioManager extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Set active audio devices
+   * Set active audio devices.
+   * Currently just logs the selection as device handling is done in renderer.
+   *
+   * @param {string} inputId - Input device ID.
+   * @param {string} outputId - Output device ID.
    */
   public async setDevices(inputId: string, outputId: string): Promise<void> {
     console.log(`[AudioManager] Devices set: Input=${inputId}, Output=${outputId}`);
   }
 
   /**
-   * Start audio processing (called when connection established)
+   * Start audio processing.
+   * Called when connection is established.
    */
   public async start(): Promise<void> {
     console.log('[AudioManager] Audio processing started');
   }
 
   /**
-   * Stop audio processing
+   * Stop audio processing.
    */
   public async stop(): Promise<void> {
     console.log('[AudioManager] Audio processing stopped');
   }
 
   /**
-   * Process incoming audio from renderer (before sending to Gemini)
+   * Process incoming audio from renderer (before sending to Gemini).
+   * Calculates volume and downsamples the audio.
+   *
+   * @param {Float32Array} audioBuffer - Input audio buffer (48kHz).
+   * @returns {Buffer} Processed audio buffer for Gemini.
    */
   public processInput(audioBuffer: Float32Array): Buffer {
     // Calculate input volume
@@ -91,7 +108,11 @@ export class AudioManager extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Process outgoing audio from Gemini (before sending to renderer)
+   * Process outgoing audio from Gemini (before sending to renderer).
+   * Upsamples the audio and calculates volume.
+   *
+   * @param {Buffer} geminiPCM - Output audio buffer from Gemini.
+   * @returns {Float32Array} Processed audio buffer for playback (48kHz).
    */
   public processOutput(geminiPCM: Buffer): Float32Array {
     if (this.muted) {
@@ -108,7 +129,7 @@ export class AudioManager extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Toggle mute state
+   * Toggle mute state.
    */
   public toggleMute(): void {
     this.muted = !this.muted;
@@ -116,14 +137,16 @@ export class AudioManager extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Get current mute state
+   * Get current mute state.
+   * @returns {boolean} True if muted, false otherwise.
    */
   public isMuted(): boolean {
     return this.muted;
   }
 
   /**
-   * Update input volume meter
+   * Update input volume meter.
+   * @param {Float32Array} samples - Audio samples.
    */
   private updateInputVolume(samples: Float32Array): void {
     const rms = this.calculateRMS(samples);
@@ -132,7 +155,8 @@ export class AudioManager extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Update output volume meter
+   * Update output volume meter.
+   * @param {Float32Array} samples - Audio samples.
    */
   private updateOutputVolume(samples: Float32Array): void {
     const rms = this.calculateRMS(samples);
@@ -141,7 +165,9 @@ export class AudioManager extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Calculate RMS (Root Mean Square) for volume measurement
+   * Calculate RMS (Root Mean Square) for volume measurement.
+   * @param {Float32Array} samples - Audio samples.
+   * @returns {number} The RMS value.
    */
   private calculateRMS(samples: Float32Array): number {
     let sum = 0;
@@ -152,7 +178,8 @@ export class AudioManager extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Throttle volume updates to prevent UI spam
+   * Throttle volume updates to prevent UI spam.
+   * Emits 'volumeUpdate' event at most every VOLUME_UPDATE_INTERVAL ms.
    */
   private throttledVolumeUpdate(): void {
     const now = Date.now();
@@ -166,7 +193,8 @@ export class AudioManager extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Get current volume levels
+   * Get current volume levels.
+   * @returns {VolumeData} Object containing input and output volume levels.
    */
   public getVolume(): VolumeData {
     return {

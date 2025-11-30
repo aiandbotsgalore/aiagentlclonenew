@@ -3,6 +3,9 @@ import { useAgentStore } from '../stores/useAgent';
 import { useUIStore } from '../stores/useUI';
 import Modal from './Modal';
 
+/**
+ * Available color options for the agent's appearance.
+ */
 const COLORS = [
     { name: 'Blue', value: '#3b82f6' },
     { name: 'Amber', value: '#f59e0b' },
@@ -12,16 +15,34 @@ const COLORS = [
     { name: 'Violet', value: '#8b5cf6' },
 ];
 
+/**
+ * A component for editing the agent's properties (name, personality, color).
+ *
+ * This component uses a modal to present a form where the user can modify
+ * the current agent's configuration. Changes are saved to the `useAgentStore`
+ * upon clicking the "Save" button.
+ *
+ * @component
+ * @returns {JSX.Element} The agent editing modal.
+ */
 const AgentEdit: React.FC = () => {
     const { current, update } = useAgentStore();
     const { setShowAgentEdit } = useUIStore();
     const [localAgent, setLocalAgent] = useState(current);
 
+    /**
+     * Handles saving the changes to the agent store and closing the modal.
+     */
     const handleSave = () => {
         update(localAgent);
         setShowAgentEdit(false);
     };
     
+    /**
+     * Handles input changes for name and personality fields.
+     *
+     * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The change event.
+     */
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setLocalAgent(prev => ({...prev, [name]: value}));

@@ -3,12 +3,24 @@ import { useUserStore } from '../stores/useUser';
 import { useUIStore } from '../stores/useUI';
 import Modal from './Modal';
 
+/**
+ * A component for editing the user's information (name and bio).
+ *
+ * This component uses a modal to present a form where the user can update their
+ * name and "about" information. Changes are saved to the `useUserStore`.
+ *
+ * @component
+ * @returns {JSX.Element} The user settings modal.
+ */
 const UserSettings: React.FC = () => {
   const { name, info, setName, setInfo } = useUserStore();
   const { setShowUserConfig } = useUIStore();
   const [localName, setLocalName] = useState(name);
   const [localInfo, setLocalInfo] = useState(info);
 
+  /**
+   * Handles saving the user information and closing the modal.
+   */
   const handleSave = () => {
     setName(localName);
     setInfo(localInfo);

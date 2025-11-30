@@ -1,10 +1,26 @@
 import React from 'react';
 import { SessionMemory } from '../../../shared/types';
 
+/**
+ * Props for the SessionMemoryPanel component.
+ */
 interface SessionMemoryPanelProps {
+  /**
+   * The session memory data to display.
+   */
   memory: SessionMemory;
 }
 
+/**
+ * Panel displaying session memory details.
+ *
+ * Shows tracked key topics, notes about speakers, and running jokes/callbacks
+ * accumulated during the session.
+ *
+ * @component
+ * @param {SessionMemoryPanelProps} props - The component props.
+ * @returns {JSX.Element} The session memory panel.
+ */
 export const SessionMemoryPanel: React.FC<SessionMemoryPanelProps> = ({ memory }) => {
   return (
     <div className="panel session-memory-panel">

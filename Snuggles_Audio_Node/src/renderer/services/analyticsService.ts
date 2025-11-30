@@ -1,7 +1,9 @@
 import { ConversationTurn, LiveAnalytics, ClipMoment } from '../../shared/types';
 
 /**
- * AnalyticsService - Real-time analytics tracking for conversations
+ * Service for tracking real-time analytics of conversations.
+ *
+ * Tracks speaking time, response times, interrupts, and joke success rates.
  */
 export class AnalyticsService {
   private sessionStartTime: number = Date.now();
@@ -14,12 +16,15 @@ export class AnalyticsService {
   private jokeAttempts: number = 0;
   private successfulJokes: number = 0;
 
+  /**
+   * Initializes the analytics service.
+   */
   constructor() {
     this.reset();
   }
 
   /**
-   * Reset analytics for new session
+   * Resets all analytics data for a new session.
    */
   public reset(): void {
     this.sessionStartTime = Date.now();
@@ -34,7 +39,10 @@ export class AnalyticsService {
   }
 
   /**
-   * Track a new conversation turn
+   * Tracks a new conversation turn and updates metrics.
+   *
+   * @param {ConversationTurn} message - The conversation message.
+   * @param {number} [responseTime] - The time taken for the AI to respond (in seconds).
    */
   public trackMessage(message: ConversationTurn, responseTime?: number): void {
     const now = Date.now();
@@ -82,7 +90,10 @@ export class AnalyticsService {
   }
 
   /**
-   * Calculate current analytics snapshot
+   * Calculates current analytics snapshot.
+   *
+   * @param {ClipMoment[]} clipMoments - List of detected clip-worthy moments.
+   * @returns {LiveAnalytics} The current analytics data.
    */
   public getAnalytics(clipMoments: ClipMoment[]): LiveAnalytics {
     const totalSpeakingTime = this.userSpeakingTime + this.aiSpeakingTime;
@@ -105,14 +116,16 @@ export class AnalyticsService {
   }
 
   /**
-   * Get session duration in milliseconds
+   * Gets the total session duration.
+   * @returns {number} Duration in milliseconds.
    */
   public getSessionDuration(): number {
     return Date.now() - this.sessionStartTime;
   }
 
   /**
-   * Get detailed statistics
+   * Gets detailed statistics object.
+   * @returns {object} Detailed session stats.
    */
   public getDetailedStats() {
     return {

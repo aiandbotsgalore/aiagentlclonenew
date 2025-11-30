@@ -10,7 +10,7 @@ const INDEX_PATH = path.join(process.cwd(), 'snuggles-index.json');
 
 /**
  * KnowledgeStore manages the Orama vector search index
- * and provides RAG functionality for Dr. Snuggles
+ * and provides Retrieval-Augmented Generation (RAG) functionality for Dr. Snuggles.
  */
 export class KnowledgeStore {
   private db: Orama<any> | null = null;
@@ -18,13 +18,18 @@ export class KnowledgeStore {
   private documents: Map<string, KnowledgeDocument> = new Map();
   private initialized: boolean = false;
 
+  /**
+   * Initializes the KnowledgeStore.
+   */
   constructor() {
     this.ingestor = new DocumentIngestor();
   }
 
   /**
-   * Initialize the knowledge store
-   * Loads from saved index if available, otherwise creates new
+   * Initialize the knowledge store.
+   * Loads from saved index if available, otherwise creates a new one.
+   *
+   * @returns {Promise<void>}
    */
   public async initialize(): Promise<void> {
     if (this.initialized) {
@@ -53,7 +58,9 @@ export class KnowledgeStore {
   }
 
   /**
-   * Create a new Orama index
+   * Create a new Orama index with the required schema.
+   *
+   * @returns {Promise<void>}
    */
   private async createNewIndex(): Promise<void> {
     this.db = await create({
@@ -71,7 +78,11 @@ export class KnowledgeStore {
   }
 
   /**
-   * Load documents from knowledge directory
+   * Load documents from knowledge directory.
+   * Parses, chunks, and indexes documents found in the specified directory.
+   *
+   * @param {string} knowledgeDir - Path to the knowledge directory.
+   * @returns {Promise<void>}
    */
   public async loadDocuments(knowledgeDir: string): Promise<void> {
     if (!this.initialized) {
@@ -124,7 +135,11 @@ export class KnowledgeStore {
   }
 
   /**
-   * Search the knowledge base
+   * Search the knowledge base.
+   *
+   * @param {string} query - The search query.
+   * @param {number} [limit=5] - Maximum number of results to return.
+   * @returns {Promise<RAGResult[]>} Array of search results with relevance scores.
    */
   public async search(query: string, limit: number = 5): Promise<RAGResult[]> {
     if (!this.initialized || !this.db) {
@@ -161,7 +176,10 @@ export class KnowledgeStore {
   }
 
   /**
-   * Get system context for Gemini (top knowledge snippets)
+   * Get system context for Gemini (top knowledge snippets).
+   * Retrieves a preview of the top available documents to prime the model.
+   *
+   * @returns {Promise<string>} The formatted context string.
    */
   public async getSystemContext(): Promise<string> {
     const topDocs = Array.from(this.documents.values()).slice(0, 3);
@@ -181,7 +199,10 @@ export class KnowledgeStore {
   }
 
   /**
-   * Save index to disk
+   * Save index to disk.
+   * Persists the Orama database to a JSON file.
+   *
+   * @returns {Promise<void>}
    */
   private async saveIndex(): Promise<void> {
     if (!this.db) return;
@@ -195,7 +216,10 @@ export class KnowledgeStore {
   }
 
   /**
-   * Calculate relevance percentage from Orama score
+   * Calculate relevance percentage from Orama score.
+   *
+   * @param {number} score - The raw score from Orama.
+   * @returns {number} The relevance percentage (0-100).
    */
   private calculateRelevance(score: number): number {
     // Orama scores are typically 0-1, normalize to 0-100
@@ -203,14 +227,18 @@ export class KnowledgeStore {
   }
 
   /**
-   * Get document count
+   * Get document count.
+   * @returns {Promise<number>} The number of documents in the store.
    */
   public async getDocumentCount(): Promise<number> {
     return this.documents.size;
   }
 
   /**
-   * Clear all documents and index
+   * Clear all documents and index.
+   * Removes all data from memory and deletes the persistent index file.
+   *
+   * @returns {Promise<void>}
    */
   public async clear(): Promise<void> {
     this.documents.clear();

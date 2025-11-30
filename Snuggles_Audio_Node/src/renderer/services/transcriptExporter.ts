@@ -1,11 +1,17 @@
 import { ConversationTurn, SessionMemory } from '../../shared/types';
 
 /**
- * TranscriptExporter - Export conversation transcripts in multiple formats
+ * Service for exporting conversation transcripts in various formats.
+ *
+ * Supports plain text (TXT), JSON, Markdown, and CSV formats.
  */
 export class TranscriptExporter {
   /**
-   * Export to plain text format
+   * Export to plain text format.
+   *
+   * @param {ConversationTurn[]} messages - The list of conversation messages.
+   * @param {SessionMemory} [sessionInfo] - Optional session metadata.
+   * @returns {string} The transcript as a plain text string.
    */
   public exportToTXT(messages: ConversationTurn[], sessionInfo?: SessionMemory): string {
     let output = '═══════════════════════════════════════════════\n';
@@ -42,7 +48,12 @@ export class TranscriptExporter {
   }
 
   /**
-   * Export to JSON format (structured data)
+   * Export to JSON format (structured data).
+   * Useful for programmatic consumption.
+   *
+   * @param {ConversationTurn[]} messages - The list of conversation messages.
+   * @param {SessionMemory} [sessionInfo] - Optional session metadata.
+   * @returns {string} The transcript as a JSON string.
    */
   public exportToJSON(messages: ConversationTurn[], sessionInfo?: SessionMemory): string {
     const data = {
@@ -73,7 +84,12 @@ export class TranscriptExporter {
   }
 
   /**
-   * Export to Markdown format (readable and shareable)
+   * Export to Markdown format.
+   * Readable and shareable format with formatting.
+   *
+   * @param {ConversationTurn[]} messages - The list of conversation messages.
+   * @param {SessionMemory} [sessionInfo] - Optional session metadata.
+   * @returns {string} The transcript as a Markdown string.
    */
   public exportToMarkdown(messages: ConversationTurn[], sessionInfo?: SessionMemory): string {
     let output = '# Dr. Snuggles - Session Transcript\n\n';
@@ -123,7 +139,11 @@ export class TranscriptExporter {
   }
 
   /**
-   * Export to CSV format (for data analysis)
+   * Export to CSV format (comma-separated values).
+   * Suitable for spreadsheet analysis.
+   *
+   * @param {ConversationTurn[]} messages - The list of conversation messages.
+   * @returns {string} The transcript as a CSV string.
    */
   public exportToCSV(messages: ConversationTurn[]): string {
     let output = 'Timestamp,ISO Time,Speaker,Role,Text,Word Count\n';
@@ -143,7 +163,12 @@ export class TranscriptExporter {
   }
 
   /**
-   * Download file to user's system
+   * Downloads a generated file to the user's system.
+   *
+   * @param {string} content - The content of the file.
+   * @param {string} filename - The name of the file to save.
+   * @param {string} mimeType - The MIME type of the content.
+   * @returns {Promise<void>}
    */
   public async downloadFile(content: string, filename: string, mimeType: string): Promise<void> {
     const blob = new Blob([content], { type: mimeType });
@@ -158,7 +183,10 @@ export class TranscriptExporter {
   }
 
   /**
-   * Generate filename with timestamp
+   * Generates a filename with the current date timestamp.
+   *
+   * @param {string} extension - The file extension (e.g., 'txt', 'json').
+   * @returns {string} The generated filename.
    */
   public generateFilename(extension: string): string {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
