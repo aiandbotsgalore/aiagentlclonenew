@@ -1,23 +1,31 @@
 /**
- * VoicePreviewService - Text-to-Speech voice preview using Web Speech API
+ * Service for previewing voices using the Web Speech API's SpeechSynthesis interface.
+ *
+ * Allows listing available voices, previewing a specific voice with custom text,
+ * and stopping playback.
  */
 export class VoicePreviewService {
   private synth: SpeechSynthesis;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
 
+  /**
+   * Initializes the VoicePreviewService.
+   */
   constructor() {
     this.synth = window.speechSynthesis;
   }
 
   /**
-   * Get available voices from the system
+   * Get available voices from the system.
+   * @returns {SpeechSynthesisVoice[]} List of available voices.
    */
   public getAvailableVoices(): SpeechSynthesisVoice[] {
     return this.synth.getVoices();
   }
 
   /**
-   * Wait for voices to load (they load asynchronously)
+   * Wait for voices to load (they load asynchronously in some browsers).
+   * @returns {Promise<SpeechSynthesisVoice[]>} Promise resolving to the list of voices.
    */
   public waitForVoices(): Promise<SpeechSynthesisVoice[]> {
     return new Promise((resolve) => {
@@ -33,7 +41,12 @@ export class VoicePreviewService {
   }
 
   /**
-   * Preview a voice with sample text
+   * Preview a voice with sample text.
+   * Stops any currently playing preview before starting.
+   *
+   * @param {string} voiceName - The name of the voice to use.
+   * @param {string} [sampleText] - The text to speak.
+   * @returns {Promise<void>} Promise resolving when the preview finishes.
    */
   public async previewVoice(
     voiceName: string,
@@ -89,7 +102,7 @@ export class VoicePreviewService {
   }
 
   /**
-   * Stop current preview
+   * Stop current preview playback.
    */
   public stop(): void {
     if (this.synth.speaking) {
@@ -99,14 +112,18 @@ export class VoicePreviewService {
   }
 
   /**
-   * Check if preview is currently playing
+   * Check if preview is currently playing.
+   * @returns {boolean} True if playing.
    */
   public isPlaying(): boolean {
     return this.synth.speaking;
   }
 
   /**
-   * Get recommended voices for Dr. Snuggles
+   * Get recommended voices for Dr. Snuggles.
+   * Filters for deep, male, English voices.
+   *
+   * @returns {Promise<SpeechSynthesisVoice[]>} List of recommended voices.
    */
   public async getRecommendedVoices(): Promise<SpeechSynthesisVoice[]> {
     const voices = await this.waitForVoices();
@@ -132,7 +149,9 @@ export class VoicePreviewService {
   }
 
   /**
-   * Get voice characteristics
+   * Get voice characteristics.
+   * @param {SpeechSynthesisVoice} voice - The voice object.
+   * @returns {object} Simplified voice information.
    */
   public getVoiceInfo(voice: SpeechSynthesisVoice) {
     return {
@@ -145,7 +164,8 @@ export class VoicePreviewService {
   }
 
   /**
-   * Test if speech synthesis is supported
+   * Test if speech synthesis is supported by the browser.
+   * @returns {boolean} True if supported.
    */
   public static isSupported(): boolean {
     return 'speechSynthesis' in window;

@@ -22,6 +22,13 @@ import { IPC_CHANNELS, AppConfig, LatencyMetrics } from '../shared/types';
 const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
 const API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAGnm_VbusODo7gdoonGgb-56nEvUHtBrg';
 
+/**
+ * The main application class for Dr. Snuggles (2025 Edition).
+ *
+ * This modernized version integrates the new Gemini Live Client, advanced audio management,
+ * and enhanced knowledge storage features. It handles the complete lifecycle of the Electron
+ * application and manages IPC communication between the main and renderer processes.
+ */
 class SnugglesApp2025 {
   private mainWindow: BrowserWindow | null = null;
   private audioManager: AudioManager2025;
@@ -30,6 +37,12 @@ class SnugglesApp2025 {
   private config: AppConfig;
   private latencyMetrics: LatencyMetrics[] = [];
 
+  /**
+   * Initializes the SnugglesApp2025.
+   *
+   * Sets up configuration, audio manager, Gemini client, knowledge store,
+   * IPC handlers, and Gemini event listeners. Logs startup information.
+   */
   constructor() {
     this.config = this.loadConfig();
     this.audioManager = new AudioManager2025();
@@ -51,6 +64,11 @@ class SnugglesApp2025 {
     console.log('='.repeat(60));
   }
 
+  /**
+   * Loads the application configuration from the user data directory.
+   *
+   * @returns {AppConfig} The loaded configuration or default values.
+   */
   private loadConfig(): AppConfig {
     try {
       if (fs.existsSync(CONFIG_PATH)) {
@@ -68,6 +86,9 @@ class SnugglesApp2025 {
     };
   }
 
+  /**
+   * Saves the current application configuration to the user data directory.
+   */
   private saveConfig(): void {
     try {
       fs.writeFileSync(CONFIG_PATH, JSON.stringify(this.config, null, 2));
@@ -77,7 +98,10 @@ class SnugglesApp2025 {
   }
 
   /**
-   * Setup Gemini event handlers
+   * Sets up event handlers for the Gemini Live Client.
+   *
+   * Handles connection events (connected, disconnected, reconnecting),
+   * audio reception, and errors. Updates the renderer process via IPC.
    */
   private setupGeminiEventHandlers(): void {
     // Connected
@@ -144,7 +168,10 @@ class SnugglesApp2025 {
   }
 
   /**
-   * Setup IPC handlers
+   * Sets up Inter-Process Communication (IPC) handlers.
+   *
+   * Registers handlers for audio device management, Gemini session control,
+   * audio streaming, and legacy support.
    */
   private setupIPC(): void {
     // ===== Audio Device Management =====
@@ -268,11 +295,25 @@ class SnugglesApp2025 {
     });
   }
 
+  /**
+   * Retrieves recent session summaries.
+   *
+   * @param {number} _count - The number of summaries to retrieve.
+   * @returns {Promise<string[]>} A promise resolving to an array of summaries.
+   */
   private async getRecentSummaries(_count: number): Promise<string[]> {
     // TODO: Implement with Dexie.js
     return [];
   }
 
+  /**
+   * Creates the main browser window for the application.
+   *
+   * Configures window properties, loads the renderer (Vite dev server or built files),
+   * and initializes the knowledge base.
+   *
+   * @returns {Promise<void>}
+   */
   async createWindow(): Promise<void> {
     this.mainWindow = new BrowserWindow({
       width: 1400,
@@ -313,6 +354,13 @@ class SnugglesApp2025 {
     }
   }
 
+  /**
+   * Initializes the application.
+   *
+   * Waits for the app to be ready, creates the window, and sets up global app event listeners.
+   *
+   * @returns {Promise<void>}
+   */
   async initialize(): Promise<void> {
     await app.whenReady();
     await this.createWindow();

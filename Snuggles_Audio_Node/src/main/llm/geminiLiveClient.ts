@@ -65,6 +65,9 @@ You are **Dr. Snuggles**, an unholy hybrid of molecular biologist, diverse esote
 Your voice is **Charon** - deep, resonant, and commanding authority.
 `;
 
+/**
+ * Events emitted by the GeminiLiveClient.
+ */
 export interface GeminiLiveClientEvents {
   connected: () => void;
   disconnected: (reason: string) => void;
@@ -73,12 +76,21 @@ export interface GeminiLiveClientEvents {
   reconnecting: (attempt: number, delayMs: number) => void;
 }
 
+/**
+ * Configuration for a Gemini Live session.
+ */
 export interface SessionConfig {
   sessionSummaries?: string[];
   knowledgeContext?: string;
   personalityMix?: { comedy: number; research: number; energy: number };
 }
 
+/**
+ * Client for the Gemini Live API (2025 Implementation).
+ *
+ * Features turn-based voice activity detection, automatic reconnection with backoff,
+ * and integration with the modern Google GenAI SDK.
+ */
 export class GeminiLiveClient extends EventEmitter<GeminiLiveClientEvents> {
   private genAI: GoogleGenAI;
   private session: any = null; // Session type from SDK
@@ -92,6 +104,11 @@ export class GeminiLiveClient extends EventEmitter<GeminiLiveClientEvents> {
   // Latency tracking
   private lastChunkSentTime: number = 0;
 
+  /**
+   * Initializes the GeminiLiveClient.
+   *
+   * @param {string} apiKey - The API key for Gemini.
+   */
   constructor(apiKey: string) {
     super();
     this.genAI = new GoogleGenAI({ apiKey });
@@ -103,7 +120,11 @@ export class GeminiLiveClient extends EventEmitter<GeminiLiveClientEvents> {
   }
 
   /**
-   * Start live session with Gemini
+   * Start live session with Gemini.
+   * Connects to the service and sets up event callbacks.
+   *
+   * @param {SessionConfig} [config={}] - Configuration for the session.
+   * @returns {Promise<void>}
    */
   public async connect(config: SessionConfig = {}): Promise<void> {
     if (this.isConnected) {
@@ -178,8 +199,11 @@ export class GeminiLiveClient extends EventEmitter<GeminiLiveClientEvents> {
   }
 
   /**
-   * Send audio chunk to Gemini (16kHz PCM16 base64)
-   * Returns latency in milliseconds
+   * Send audio chunk to Gemini (16kHz PCM16 base64).
+   * Returns latency in milliseconds.
+   *
+   * @param {Float32Array} audioChunk - The audio data to send.
+   * @returns {Promise<number>} The latency of the send operation, or 0 if skipped.
    */
   public async sendAudio(audioChunk: Float32Array): Promise<number> {
     if (!this.isConnected || !this.session) {
@@ -224,7 +248,10 @@ export class GeminiLiveClient extends EventEmitter<GeminiLiveClientEvents> {
   }
 
   /**
-   * Disconnect session
+   * Disconnect session.
+   * Stops reconnection attempts and closes the session.
+   *
+   * @returns {Promise<void>}
    */
   public async disconnect(): Promise<void> {
     console.log('[GeminiLiveClient] Disconnecting...');
@@ -256,14 +283,16 @@ export class GeminiLiveClient extends EventEmitter<GeminiLiveClientEvents> {
   }
 
   /**
-   * Check connection status
+   * Check connection status.
+   * @returns {boolean} True if connected.
    */
   public connected(): boolean {
     return this.isConnected;
   }
 
   /**
-   * Get VAD state
+   * Get VAD state.
+   * @returns {object} The current state of the Voice Activity Detector.
    */
   public getVADState() {
     return this.vad.getState();
@@ -272,7 +301,10 @@ export class GeminiLiveClient extends EventEmitter<GeminiLiveClientEvents> {
   // ===== PRIVATE METHODS =====
 
   /**
-   * Handle incoming message from Gemini
+   * Handle incoming message from Gemini.
+   * Processes audio responses and manages turn-taking.
+   *
+   * @param {any} event - The message event.
    */
   private handleMessage(event: any): void {
     try {
@@ -317,7 +349,11 @@ export class GeminiLiveClient extends EventEmitter<GeminiLiveClientEvents> {
   }
 
   /**
-   * Build system instruction with context
+   * Build system instruction with context.
+   * Integrates time, session history, knowledge, and personality into the prompt.
+   *
+   * @param {SessionConfig} config - The session configuration.
+   * @returns {string} The complete system instruction.
    */
   private buildSystemInstruction(config: SessionConfig): string {
     const currentTime = new Date().toLocaleString('en-US', {
@@ -352,7 +388,7 @@ export class GeminiLiveClient extends EventEmitter<GeminiLiveClientEvents> {
   }
 
   /**
-   * Schedule reconnection with exponential backoff
+   * Schedule reconnection with exponential backoff.
    */
   private scheduleReconnect(): void {
     if (!this.shouldReconnect) return;

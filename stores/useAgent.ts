@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Agent } from '../types';
 
+/**
+ * Predefined agent presets.
+ */
 const AGENT_PRESETS: Agent[] = [
   {
     id: 'zara-p',
@@ -30,15 +33,40 @@ const AGENT_PRESETS: Agent[] = [
 ];
 
 
+/**
+ * State definition for the Agent store.
+ */
 type AgentState = {
+  /**
+   * The currently selected agent.
+   */
   current: Agent;
+  /**
+   * List of available preset agents.
+   */
   availablePresets: Agent[];
+  /**
+   * List of custom user-created agents.
+   */
   availablePersonal: Agent[];
+  /**
+   * Sets the current agent by ID.
+   * @param {string} agentId - The ID of the agent to select.
+   */
   setCurrent: (agentId: string) => void;
+  /**
+   * Updates the current agent's data.
+   * @param {Partial<Agent>} agentData - The partial agent data to update.
+   */
   update: (agentData: Partial<Agent>) => void;
   // addAgent, deleteAgent etc. could be added here
 };
 
+/**
+ * Store for managing agent state, including selection, updates, and persistence.
+ *
+ * It uses Zustand with persistence to save the state to local storage.
+ */
 export const useAgentStore = create<AgentState>()(
   persist(
     (set, get) => ({

@@ -4,21 +4,56 @@ import { AudioStreamer } from '../lib/AudioStreamer';
 import { useAgentStore } from '../stores/useAgent';
 import { useUserStore } from '../stores/useUser';
 
+/**
+ * Interface representing the return value of the `useLiveApi` hook.
+ */
 export interface UseLiveApiReturn {
+  /**
+   * Indicates if the client is currently connected.
+   */
   isConnected: boolean;
+  /**
+   * The current output volume level (0-1).
+   */
   outputVolume: number;
+  /**
+   * The underlying GenAI Live Client instance.
+   */
   client: GenAILiveClient | null;
+  /**
+   * Connects to the Live API.
+   * @returns {Promise<void>}
+   */
   connect: () => Promise<void>;
+  /**
+   * Disconnects from the Live API.
+   */
   disconnect: () => void;
+  /**
+   * The current connection error message, if any.
+   */
   connectionError: string | null;
+  /**
+   * Indicates if a connection is currently being established.
+   */
   isConnecting: boolean;
-  reconnectAttempt: number;  // Expose for UI feedback (e.g., "Reconnecting... attempt 3")
+  /**
+   * The current reconnection attempt number.
+   */
+  reconnectAttempt: number;
 }
 
 const MAX_RECONNECT_ATTEMPTS = 10;
 const BASE_RECONNECT_DELAY_MS = 1000;
 const MAX_RECONNECT_DELAY_MS = 30000;
 
+/**
+ * Hook to manage the connection to the Generative AI Live API.
+ *
+ * This hook handles connection state, audio streaming, error handling, and automatic reconnection.
+ *
+ * @returns {UseLiveApiReturn} The hook's return value.
+ */
 export const useLiveApi = (): UseLiveApiReturn => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -46,7 +81,12 @@ export const useLiveApi = (): UseLiveApiReturn => {
   const { current: currentAgent } = useAgentStore();
   const { name, info } = useUserStore();
 
-  // Internal connect function that can be called by reconnection logic
+  /**
+   * Internal function to establish a connection.
+   *
+   * @param {boolean} [isReconnect=false] - Whether this is a reconnection attempt.
+   * @returns {Promise<void>}
+   */
   const connectInternal = useCallback(async (isReconnect = false): Promise<void> => {
     if (!clientRef.current || !streamerRef.current) {
       throw new Error('Client not initialized');
@@ -99,7 +139,9 @@ export const useLiveApi = (): UseLiveApiReturn => {
     }
   }, [currentAgent, name, info]);
 
-  // Schedule reconnection with exponential backoff
+  /**
+   * Schedules a reconnection attempt with exponential backoff.
+   */
   const scheduleReconnect = useCallback(() => {
     if (!shouldReconnect.current) {
       console.log('Reconnection disabled (user disconnected)');
@@ -133,7 +175,9 @@ export const useLiveApi = (): UseLiveApiReturn => {
     }, delay);
   }, [connectInternal]);
 
-  // Cancel any pending reconnection
+  /**
+   * Cancels any pending reconnection attempts.
+   */
   const cancelReconnect = useCallback(() => {
     if (reconnectTimeout.current) {
       clearTimeout(reconnectTimeout.current);
@@ -216,7 +260,10 @@ export const useLiveApi = (): UseLiveApiReturn => {
     };
   }, [scheduleReconnect, cancelReconnect]);
 
-  // Public connect: user-initiated
+  /**
+   * Initiates the connection to the Live API.
+   * Can be called by the user.
+   */
   const connect = useCallback(async (): Promise<void> => {
     if (isConnecting) {
       console.warn('Connection already in progress');
@@ -235,7 +282,10 @@ export const useLiveApi = (): UseLiveApiReturn => {
     await connectInternal(false);
   }, [isConnecting, isConnected, connectInternal, cancelReconnect]);
 
-  // Public disconnect: user-initiated
+  /**
+   * Disconnects from the Live API.
+   * Can be called by the user.
+   */
   const disconnect = useCallback(() => {
     // Disable auto-reconnect when user explicitly disconnects
     shouldReconnect.current = false;

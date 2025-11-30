@@ -11,13 +11,17 @@
  * - Downstream: base64 PCM16 → Int16Array → Float32Array
  */
 
+/**
+ * Handles high-performance audio resampling using linear interpolation.
+ */
 export class AudioResampler {
   private ratio: number;
 
   /**
-   * Create resampler with source and target rates
-   * @param sourceRate - Input sample rate (Hz)
-   * @param targetRate - Output sample rate (Hz)
+   * Create resampler with source and target rates.
+   *
+   * @param {number} sourceRate - Input sample rate (Hz).
+   * @param {number} targetRate - Output sample rate (Hz).
    */
   constructor(
     private sourceRate: number,
@@ -28,8 +32,11 @@ export class AudioResampler {
   }
 
   /**
-   * Resample audio using linear interpolation
-   * Ultra-fast, minimal CPU overhead
+   * Resample audio using linear interpolation.
+   * Ultra-fast, minimal CPU overhead.
+   *
+   * @param {Float32Array} input - Input audio samples.
+   * @returns {Float32Array} Resampled audio samples.
    */
   public resample(input: Float32Array): Float32Array {
     if (this.sourceRate === this.targetRate) {
@@ -53,8 +60,11 @@ export class AudioResampler {
   }
 
   /**
-   * Convert Float32 PCM to Int16 PCM
-   * Required format for Gemini API
+   * Convert Float32 PCM to Int16 PCM.
+   * Required format for Gemini API.
+   *
+   * @param {Float32Array} float32 - Input float audio data.
+   * @returns {Int16Array} Converted 16-bit integer audio data.
    */
   public static float32ToInt16(float32: Float32Array): Int16Array {
     const int16 = new Int16Array(float32.length);
@@ -68,8 +78,11 @@ export class AudioResampler {
   }
 
   /**
-   * Convert Int16 PCM to Float32 PCM
-   * For audio playback
+   * Convert Int16 PCM to Float32 PCM.
+   * For audio playback.
+   *
+   * @param {Int16Array} int16 - Input 16-bit integer audio data.
+   * @returns {Float32Array} Converted float audio data.
    */
   public static int16ToFloat32(int16: Int16Array): Float32Array {
     const float32 = new Float32Array(int16.length);
@@ -82,8 +95,12 @@ export class AudioResampler {
   }
 
   /**
-   * UPSTREAM PIPELINE: System audio → Gemini
-   * 48kHz Float32 → 16kHz Int16 → base64
+   * UPSTREAM PIPELINE: System audio → Gemini.
+   * 48kHz Float32 → 16kHz Int16 → base64.
+   *
+   * @param {Float32Array} systemAudio - Input audio buffer.
+   * @param {AudioResampler} resampler - Resampler instance to use.
+   * @returns {string} Base64 encoded audio string.
    */
   public static prepareForGemini(systemAudio: Float32Array, resampler: AudioResampler): string {
     // 1. Resample: 48kHz → 16kHz
@@ -98,8 +115,12 @@ export class AudioResampler {
   }
 
   /**
-   * DOWNSTREAM PIPELINE: Gemini → System audio
-   * base64 → 24kHz Int16 → Float32 → 48kHz Float32
+   * DOWNSTREAM PIPELINE: Gemini → System audio.
+   * base64 → 24kHz Int16 → Float32 → 48kHz Float32.
+   *
+   * @param {string} base64PCM - Base64 encoded audio string from Gemini.
+   * @param {AudioResampler} resampler - Resampler instance to use.
+   * @returns {Float32Array} System-ready audio buffer.
    */
   public static prepareForPlayback(base64PCM: string, resampler: AudioResampler): Float32Array {
     // 1. Decode: base64 → Buffer
@@ -117,26 +138,38 @@ export class AudioResampler {
     return upsampled;
   }
 
+  /**
+   * Get the source sample rate.
+   * @returns {number} Source sample rate in Hz.
+   */
   public getSourceRate(): number {
     return this.sourceRate;
   }
 
+  /**
+   * Get the target sample rate.
+   * @returns {number} Target sample rate in Hz.
+   */
   public getTargetRate(): number {
     return this.targetRate;
   }
 
+  /**
+   * Get the resampling ratio.
+   * @returns {number} Ratio of target rate to source rate.
+   */
   public getRatio(): number {
     return this.ratio;
   }
 }
 
 /**
- * Pre-configured resampler instances
+ * Pre-configured resampler instances for common conversion tasks.
  */
 export class AudioResamplers {
-  // Upstream: System (48kHz) → Gemini (16kHz)
+  /** Upstream resampler: System (48kHz) → Gemini (16kHz). */
   public static readonly UPSTREAM = new AudioResampler(48000, 16000);
 
-  // Downstream: Gemini (24kHz) → System (48kHz)
+  /** Downstream resampler: Gemini (24kHz) → System (48kHz). */
   public static readonly DOWNSTREAM = new AudioResampler(24000, 48000);
 }

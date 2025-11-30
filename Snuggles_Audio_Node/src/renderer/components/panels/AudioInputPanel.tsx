@@ -1,10 +1,25 @@
 import React, { useRef, useEffect } from 'react';
 import { VolumeData } from '../../../shared/types';
 
+/**
+ * Props for the AudioInputPanel component.
+ */
 interface AudioInputPanelProps {
+  /**
+   * Current volume data for input and output.
+   */
   volume: VolumeData;
 }
 
+/**
+ * Panel visualizing audio input and output levels.
+ *
+ * Displays numeric dB levels and a live waveform visualization using an HTML5 Canvas.
+ *
+ * @component
+ * @param {AudioInputPanelProps} props - The component props.
+ * @returns {JSX.Element} The audio input panel.
+ */
 export const AudioInputPanel: React.FC<AudioInputPanelProps> = ({ volume }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 

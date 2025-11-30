@@ -1,19 +1,48 @@
 import React from 'react';
 import { AICohostStatus } from '../../../shared/types';
 
+/**
+ * Props for the AICohostPanel component.
+ */
 interface AICohostPanelProps {
+  /**
+   * Current status of the AI cohost.
+   */
   status: AICohostStatus;
+  /**
+   * Callback for the play/pause button.
+   */
   onPlay: () => void;
+  /**
+   * Callback for the skip button.
+   */
   onSkip: () => void;
+  /**
+   * Whether the AI is currently connected.
+   */
   connected: boolean;
 }
 
+/**
+ * Panel displaying the AI cohost's status and controls.
+ *
+ * Shows whether the AI is listening, thinking, or speaking, along with metrics
+ * like response time and confidence. Provides Play/Pause and Skip controls.
+ *
+ * @component
+ * @param {AICohostPanelProps} props - The component props.
+ * @returns {JSX.Element} The AI Cohost panel.
+ */
 export const AICohostPanel: React.FC<AICohostPanelProps> = ({
   status,
   onPlay,
   onSkip,
   connected
 }) => {
+  /**
+   * Determines the color of the status indicator based on the current state.
+   * @returns {string} The CSS color string.
+   */
   const getStatusColor = () => {
     switch (status.status) {
       case 'listening': return '#3b82f6';
@@ -23,6 +52,10 @@ export const AICohostPanel: React.FC<AICohostPanelProps> = ({
     }
   };
 
+  /**
+   * Returns the human-readable text for the current status.
+   * @returns {string} The status text.
+   */
   const getStatusText = () => {
     switch (status.status) {
       case 'listening': return 'Listening';

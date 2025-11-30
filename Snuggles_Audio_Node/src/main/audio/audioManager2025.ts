@@ -24,20 +24,30 @@ interface AudioManagerEvents {
 
 const VOLUME_UPDATE_INTERVAL = 100; // ms
 
+/**
+ * Modernized AudioManager for processing audio streams, monitoring volume,
+ * and managing mute state.
+ */
 export class AudioManager2025 extends EventEmitter<AudioManagerEvents> {
   private muted: boolean = false;
   private inputVolume: number = 0;
   private outputVolume: number = 0;
   private lastVolumeUpdate: number = 0;
 
+  /**
+   * Initializes the AudioManager2025.
+   */
   constructor() {
     super();
     console.log('[AudioManager2025] Initialized');
   }
 
   /**
-   * Get available audio devices
-   * NOTE: Actual device enumeration happens in renderer
+   * Get available audio devices.
+   * NOTE: Actual device enumeration happens in the renderer process.
+   * This provides a placeholder list for the main process.
+   *
+   * @returns {Promise<AudioDevice[]>} Placeholder list of audio devices.
    */
   public async getDevices(): Promise<AudioDevice[]> {
     return [
@@ -49,15 +59,24 @@ export class AudioManager2025 extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Set active audio devices
+   * Set active audio devices.
+   * Logs the selection. Actual switching logic is handled in the renderer.
+   *
+   * @param {string} inputId - Input device ID.
+   * @param {string} outputId - Output device ID.
    */
   public async setDevices(inputId: string, outputId: string): Promise<void> {
     console.log(`[AudioManager2025] Devices: Input=${inputId}, Output=${outputId}`);
   }
 
   /**
-   * Process incoming audio from renderer
-   * Calculates volume and forwards to Gemini client
+   * Process incoming audio from the renderer.
+   * Calculates input volume for monitoring.
+   *
+   * Note: Audio transmission to Gemini is handled directly by GeminiLiveClient.
+   * This method is primarily for volume monitoring.
+   *
+   * @param {Float32Array} audioBuffer - Input audio buffer (48kHz).
    */
   public processInputAudio(audioBuffer: Float32Array): void {
     // Calculate input volume
@@ -70,8 +89,11 @@ export class AudioManager2025 extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Process outgoing audio from Gemini
-   * Calculates volume before playback
+   * Process outgoing audio from Gemini.
+   * Calculates output volume and handles muting.
+   *
+   * @param {Float32Array} audioBuffer - Output audio buffer.
+   * @returns {Float32Array} The processed audio buffer (silenced if muted).
    */
   public processOutputAudio(audioBuffer: Float32Array): Float32Array {
     if (this.muted) {
@@ -87,7 +109,7 @@ export class AudioManager2025 extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Toggle mute state
+   * Toggle mute state.
    */
   public toggleMute(): void {
     this.muted = !this.muted;
@@ -95,14 +117,16 @@ export class AudioManager2025 extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Get mute state
+   * Get mute state.
+   * @returns {boolean} True if muted, false otherwise.
    */
   public isMuted(): boolean {
     return this.muted;
   }
 
   /**
-   * Get current volume levels
+   * Get current volume levels.
+   * @returns {VolumeData} Object containing input and output volume levels.
    */
   public getVolume(): VolumeData {
     return {
@@ -112,14 +136,15 @@ export class AudioManager2025 extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Start audio processing
+   * Start audio processing.
+   * Called when connection is established.
    */
   public async start(): Promise<void> {
     console.log('[AudioManager2025] Audio processing started');
   }
 
   /**
-   * Stop audio processing
+   * Stop audio processing.
    */
   public async stop(): Promise<void> {
     console.log('[AudioManager2025] Audio processing stopped');
@@ -128,7 +153,9 @@ export class AudioManager2025 extends EventEmitter<AudioManagerEvents> {
   // ===== PRIVATE METHODS =====
 
   /**
-   * Calculate RMS (Root Mean Square) for volume measurement
+   * Calculate RMS (Root Mean Square) for volume measurement.
+   * @param {Float32Array} samples - Audio samples.
+   * @returns {number} The RMS value.
    */
   private calculateRMS(samples: Float32Array): number {
     if (samples.length === 0) return 0;
@@ -141,7 +168,8 @@ export class AudioManager2025 extends EventEmitter<AudioManagerEvents> {
   }
 
   /**
-   * Throttle volume updates to prevent UI spam
+   * Throttle volume updates to prevent UI spam.
+   * Emits 'volumeUpdate' event at most every VOLUME_UPDATE_INTERVAL ms.
    */
   private throttledVolumeUpdate(): void {
     const now = Date.now();

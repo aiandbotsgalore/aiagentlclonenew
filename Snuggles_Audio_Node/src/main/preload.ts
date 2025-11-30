@@ -3,41 +3,85 @@ import { IPC_CHANNELS, AudioDevice, ConnectionStatus, VolumeData, ConversationTu
 
 /**
  * Preload script - Exposes safe IPC APIs to renderer
+ *
+ * This script runs in the renderer process before other scripts. It exposes a
+ * `snugglesAPI` object on the `window` global, providing safe access to
+ * functionality in the main process via IPC.
  */
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('snugglesAPI', {
-  // Audio devices
+  /**
+   * Retrieves the list of available audio devices.
+   */
   getAudioDevices: () => ipcRenderer.invoke(IPC_CHANNELS.GET_AUDIO_DEVICES),
+  /**
+   * Sets the input and output audio devices.
+   * @param inputId - The ID of the input device.
+   * @param outputId - The ID of the output device.
+   */
   setAudioDevices: (inputId: string, outputId: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.SET_AUDIO_DEVICES, inputId, outputId),
 
-  // Gemini connection
+  /**
+   * Connects to the Gemini service.
+   */
   connect: () => ipcRenderer.invoke(IPC_CHANNELS.CONNECT_GEMINI),
+  /**
+   * Disconnects from the Gemini service.
+   */
   disconnect: () => ipcRenderer.invoke(IPC_CHANNELS.DISCONNECT_GEMINI),
+  /**
+   * Sends a text message to the Gemini service.
+   * @param text - The text message to send.
+   */
   sendMessage: (text: string) => ipcRenderer.invoke(IPC_CHANNELS.SEND_MESSAGE, text),
 
-  // Controls
+  /**
+   * Toggles the mute status of the microphone.
+   */
   toggleMute: () => ipcRenderer.invoke(IPC_CHANNELS.TOGGLE_MUTE),
+  /**
+   * Resets the agent's state and reconnects.
+   */
   resetAgent: () => ipcRenderer.invoke(IPC_CHANNELS.RESET_AGENT),
 
-  // Status
+  /**
+   * Gets the current status of the application (connection, mute, devices).
+   */
   getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.GET_STATUS),
 
-  // Knowledge
+  /**
+   * Searches the knowledge base.
+   * @param query - The search query.
+   */
   searchKnowledge: (query: string) => ipcRenderer.invoke(IPC_CHANNELS.SEARCH_KNOWLEDGE, query),
+  /**
+   * Reloads the knowledge base from disk.
+   */
   loadKnowledge: () => ipcRenderer.invoke(IPC_CHANNELS.LOAD_KNOWLEDGE),
 
-  // Event listeners
+  /**
+   * Registers a callback for volume updates.
+   * @param callback - The function to call with volume data.
+   */
   onVolumeUpdate: (callback: (data: VolumeData) => void) => {
     ipcRenderer.on(IPC_CHANNELS.VOLUME_UPDATE, (_, data) => callback(data));
   },
 
+  /**
+   * Registers a callback for connection status updates.
+   * @param callback - The function to call with status updates.
+   */
   onConnectionStatus: (callback: (status: ConnectionStatus) => void) => {
     ipcRenderer.on(IPC_CHANNELS.CONNECTION_STATUS, (_, status) => callback(status));
   },
 
+  /**
+   * Registers a callback for received messages.
+   * @param callback - The function to call with the received message.
+   */
   onMessageReceived: (callback: (message: ConversationTurn) => void) => {
     ipcRenderer.on(IPC_CHANNELS.MESSAGE_RECEIVED, (_, message) => callback(message));
   },
@@ -84,7 +128,9 @@ contextBridge.exposeInMainWorld('snugglesAPI', {
   }
 });
 
-// TypeScript type definitions for window.snugglesAPI
+/**
+ * TypeScript type definitions for the global `window.snugglesAPI` object.
+ */
 declare global {
   interface Window {
     snugglesAPI: {

@@ -3,6 +3,15 @@ import { useLiveAPI } from '../context/LiveAPIProvider';
 import { useUserStore } from '../stores/useUser';
 import BasicFace from './BasicFace';
 
+/**
+ * The main companion component that displays the agent's face.
+ *
+ * It manages the initial greeting when the connection is established and renders
+ * the `BasicFace` component with the current output volume.
+ *
+ * @component
+ * @returns {JSX.Element} The keynote companion component.
+ */
 const KeynoteCompanion: React.FC = () => {
     const { isConnected, client, outputVolume } = useLiveAPI();
     const { name } = useUserStore();

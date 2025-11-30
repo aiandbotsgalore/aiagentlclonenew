@@ -2,6 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useLiveAPI } from '../context/LiveAPIProvider';
 import { AudioRecorder } from '../lib/AudioRecorder';
 
+/**
+ * A component that provides controls for the application, such as connecting/disconnecting,
+ * muting audio, and sending text input.
+ *
+ * It manages the audio recording and streaming logic when connected to the Live API.
+ *
+ * @component
+ * @returns {JSX.Element} The control tray component.
+ */
 const ControlTray: React.FC = () => {
     const { isConnected, isConnecting, connectionError, reconnectAttempt, connect, disconnect, client } = useLiveAPI();
     const [isMuted, setIsMuted] = useState(false);
@@ -68,6 +77,9 @@ const ControlTray: React.FC = () => {
         };
     }, [isConnected, isMuted, client]);
 
+    /**
+     * Toggles the connection to the Live API.
+     */
     const handleConnectToggle = () => {
         if (isConnected) {
             disconnect();
@@ -79,6 +91,9 @@ const ControlTray: React.FC = () => {
 
     const MAX_TEXT_LENGTH = 1000;
 
+    /**
+     * Sends the text input to the Live API.
+     */
     const handleSendText = () => {
         const trimmed = textInput.trim();
 
@@ -98,6 +113,11 @@ const ControlTray: React.FC = () => {
         }
     };
 
+    /**
+     * Handles key press events in the text input, sending the message on Enter.
+     *
+     * @param {React.KeyboardEvent} e - The keyboard event.
+     */
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();

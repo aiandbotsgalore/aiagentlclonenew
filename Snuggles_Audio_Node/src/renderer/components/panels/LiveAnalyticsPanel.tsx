@@ -1,14 +1,42 @@
 import React from 'react';
 import { LiveAnalytics } from '../../../shared/types';
 
+/**
+ * Props for the LiveAnalyticsPanel component.
+ */
 interface LiveAnalyticsPanelProps {
+  /**
+   * The live analytics data to display.
+   */
   analytics: LiveAnalytics;
+  /**
+   * The formatted current session time.
+   */
   sessionTime: string;
+  /**
+   * Callback to export transcript as TXT.
+   */
   onExportTXT: () => void;
+  /**
+   * Callback to export transcript as JSON.
+   */
   onExportJSON: () => void;
+  /**
+   * Callback to export transcript as Markdown.
+   */
   onExportMarkdown: () => void;
 }
 
+/**
+ * Panel displaying real-time analytics for the session.
+ *
+ * Visualizes speaking time distribution, response metrics, and automatically detected
+ * clip-worthy moments. Provides buttons to export the session transcript in various formats.
+ *
+ * @component
+ * @param {LiveAnalyticsPanelProps} props - The component props.
+ * @returns {JSX.Element} The live analytics panel.
+ */
 export const LiveAnalyticsPanel: React.FC<LiveAnalyticsPanelProps> = ({
   analytics,
   sessionTime,

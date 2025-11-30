@@ -2,6 +2,15 @@ import React, { useRef, useEffect } from 'react';
 import { useAgentStore } from '../stores/useAgent';
 import { useHover, useTilt } from '../hooks/useInteractions';
 
+/**
+ * Hook to handle the rendering logic for the face on a canvas.
+ *
+ * It draws a simple face with eyes and a mouth that reacts to audio volume.
+ *
+ * @param {React.RefObject<HTMLCanvasElement>} canvasRef - The ref to the canvas element.
+ * @param {string} color - The color of the face.
+ * @param {number} volume - The current audio volume level (0-1).
+ */
 const useFace = (
     canvasRef: React.RefObject<HTMLCanvasElement>,
     color: string,
@@ -77,10 +86,26 @@ const useFace = (
     }, [canvasRef, color, volume]);
 };
 
+/**
+ * Props for the BasicFace component.
+ */
 interface BasicFaceProps {
+    /**
+     * The audio volume level (0-1) to control the mouth animation.
+     */
     volume: number;
 }
 
+/**
+ * A component that renders a basic animated face reacting to audio volume.
+ *
+ * It uses a canvas to draw the face and includes interaction hooks for
+ * hover and tilt effects.
+ *
+ * @component
+ * @param {BasicFaceProps} props - The component props.
+ * @returns {JSX.Element} The rendered face component.
+ */
 const BasicFace: React.FC<BasicFaceProps> = ({ volume }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);

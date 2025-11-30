@@ -40,11 +40,23 @@ class VolumeMeterProcessor extends AudioWorkletProcessor {
 registerProcessor('${WORKLET_PROCESSOR_NAME}', VolumeMeterProcessor);
 `;
 
-// Fix: Added event types for EventEmitter to resolve 'emit' and 'on' not being found.
+/**
+ * Events emitted by the AudioStreamer.
+ */
 type AudioStreamerEvents = {
+  /**
+   * Emitted when volume level is calculated.
+   * @param {number} rms - The Root Mean Square (volume) value.
+   */
   volume: (rms: number) => void;
 };
 
+/**
+ * Class responsible for streaming and playing audio data.
+ *
+ * It uses an AudioContext and AudioWorklet to process and play audio chunks.
+ * Also emits volume updates based on the audio being played.
+ */
 export class AudioStreamer extends EventEmitter<AudioStreamerEvents> {
   private context: AudioContext | null = null;
   private workletNode: AudioWorkletNode | null = null;
@@ -53,6 +65,14 @@ export class AudioStreamer extends EventEmitter<AudioStreamerEvents> {
   private audioQueue: ArrayBuffer[] = [];
   private isPlaying = false;
 
+  /**
+   * Initializes the AudioStreamer.
+   *
+   * Creates the AudioContext, loads the AudioWorklet for volume metering,
+   * and sets up the audio graph.
+   *
+   * @returns {Promise<void>}
+   */
   async init() {
     if (this.context) return;
     this.context = new AudioContext({ sampleRate: 16000 });
@@ -77,6 +97,11 @@ export class AudioStreamer extends EventEmitter<AudioStreamerEvents> {
     this.startTime = this.context.currentTime;
   }
 
+  /**
+   * Receives a chunk of audio data to be played.
+   *
+   * @param {ArrayBuffer} audioBuffer - The audio data chunk.
+   */
   receiveAudio(audioBuffer: ArrayBuffer) {
     this.audioQueue.push(audioBuffer);
     if (!this.isPlaying) {
@@ -84,6 +109,11 @@ export class AudioStreamer extends EventEmitter<AudioStreamerEvents> {
     }
   }
 
+  /**
+   * Processes the audio queue and plays chunks sequentially.
+   *
+   * @private
+   */
   private async playQueue() {
     if (this.audioQueue.length === 0) {
       this.isPlaying = false;
@@ -146,6 +176,13 @@ export class AudioStreamer extends EventEmitter<AudioStreamerEvents> {
     }
   }
 
+  /**
+   * Stops audio playback and cleans up resources.
+   *
+   * Clears the audio queue, stops the context, and releases nodes.
+   *
+   * @returns {Promise<void>}
+   */
   async stop() {
     this.audioQueue = [];
     this.isPlaying = false;

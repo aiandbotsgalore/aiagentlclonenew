@@ -11,6 +11,9 @@ import { KnowledgeDocument } from '../../shared/types';
 export class DocumentIngestor {
   /**
    * Load all documents from a directory
+   *
+   * @param {string} dirPath - The directory path to scan for documents.
+   * @returns {Promise<KnowledgeDocument[]>} A list of parsed documents.
    */
   public async loadDirectory(dirPath: string): Promise<KnowledgeDocument[]> {
     const documents: KnowledgeDocument[] = [];
@@ -45,6 +48,9 @@ export class DocumentIngestor {
 
   /**
    * Parse a PDF file
+   *
+   * @param {string} filePath - Path to the PDF file.
+   * @returns {Promise<KnowledgeDocument | null>} The parsed document or null on failure.
    */
   private async parsePDF(filePath: string): Promise<KnowledgeDocument | null> {
     try {
@@ -72,6 +78,9 @@ export class DocumentIngestor {
 
   /**
    * Parse a text file
+   *
+   * @param {string} filePath - Path to the text file.
+   * @returns {Promise<KnowledgeDocument | null>} The parsed document or null on failure.
    */
   private async parseText(filePath: string): Promise<KnowledgeDocument | null> {
     try {
@@ -98,6 +107,9 @@ export class DocumentIngestor {
 
   /**
    * Clean and normalize text
+   *
+   * @param {string} text - The raw text content.
+   * @returns {string} The cleaned text.
    */
   private cleanText(text: string): string {
     return text
@@ -109,6 +121,9 @@ export class DocumentIngestor {
 
   /**
    * Generate unique ID from file path
+   *
+   * @param {string} filePath - The file path to hash.
+   * @returns {string} A unique document ID.
    */
   private generateId(filePath: string): string {
     const hash = this.simpleHash(filePath);
@@ -117,6 +132,9 @@ export class DocumentIngestor {
 
   /**
    * Simple string hash function
+   *
+   * @param {string} str - The input string.
+   * @returns {string} The hash as a base36 string.
    */
   private simpleHash(str: string): string {
     let hash = 0;
@@ -130,6 +148,10 @@ export class DocumentIngestor {
 
   /**
    * Chunk a document into smaller pieces for better RAG
+   *
+   * @param {KnowledgeDocument} doc - The document to chunk.
+   * @param {number} [chunkSize=1000] - The number of words per chunk.
+   * @returns {KnowledgeDocument[]} An array of document chunks.
    */
   public chunkDocument(doc: KnowledgeDocument, chunkSize: number = 1000): KnowledgeDocument[] {
     const chunks: KnowledgeDocument[] = [];

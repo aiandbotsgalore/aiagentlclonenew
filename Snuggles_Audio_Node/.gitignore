@@ -46,3 +46,4 @@ config.json
 # Temporary files
 *.tmp
 *.temp
+node_modules/

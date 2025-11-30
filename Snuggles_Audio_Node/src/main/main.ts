@@ -9,6 +9,12 @@ import fs from 'fs';
 const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
 const API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAGnm_VbusODo7gdoonGgb-56nEvUHtBrg';
 
+/**
+ * The main application class for Dr. Snuggles.
+ *
+ * It manages the Electron main process, including window creation, IPC communication,
+ * and integration of various modules like audio management, Gemini client, and knowledge store.
+ */
 class SnugglesApp {
   private mainWindow: BrowserWindow | null = null;
   private audioManager: AudioManager;
@@ -16,6 +22,11 @@ class SnugglesApp {
   private knowledgeStore: KnowledgeStore;
   private config: AppConfig;
 
+  /**
+   * Initializes the SnugglesApp.
+   *
+   * Loads configuration, initializes managers (Audio, Gemini, Knowledge), and sets up IPC handlers.
+   */
   constructor() {
     this.config = this.loadConfig();
     this.audioManager = new AudioManager();
@@ -25,6 +36,11 @@ class SnugglesApp {
     this.setupIPC();
   }
 
+  /**
+   * Loads the application configuration from disk.
+   *
+   * @returns {AppConfig} The loaded configuration or defaults if loading fails.
+   */
   private loadConfig(): AppConfig {
     try {
       if (fs.existsSync(CONFIG_PATH)) {
@@ -42,6 +58,9 @@ class SnugglesApp {
     };
   }
 
+  /**
+   * Saves the current configuration to disk.
+   */
   private saveConfig(): void {
     try {
       fs.writeFileSync(CONFIG_PATH, JSON.stringify(this.config, null, 2));
@@ -50,6 +69,12 @@ class SnugglesApp {
     }
   }
 
+  /**
+   * Sets up Inter-Process Communication (IPC) handlers.
+   *
+   * Handles messages from the renderer process related to audio devices,
+   * Gemini connection, messaging, mute status, and knowledge base operations.
+   */
   private setupIPC(): void {
     // Audio device management
     ipcMain.handle(IPC_CHANNELS.GET_AUDIO_DEVICES, async () => {
@@ -132,11 +157,25 @@ class SnugglesApp {
     });
   }
 
+  /**
+   * Retrieves recent session summaries.
+   *
+   * @param {number} _count - The number of summaries to retrieve.
+   * @returns {Promise<string[]>} A promise resolving to an array of summary strings.
+   */
   private async getRecentSummaries(_count: number): Promise<string[]> {
     // TODO: Implement with Dexie.js in next phase
     return [];
   }
 
+  /**
+   * Creates the main application window.
+   *
+   * Configures the window properties, loads the appropriate URL or file based on environment,
+   * and initializes the knowledge base.
+   *
+   * @returns {Promise<void>}
+   */
   async createWindow(): Promise<void> {
     this.mainWindow = new BrowserWindow({
       width: 1200,
@@ -172,6 +211,13 @@ class SnugglesApp {
     }
   }
 
+  /**
+   * Initializes the application.
+   *
+   * Waits for the app to be ready, creates the window, and sets up lifecycle event listeners.
+   *
+   * @returns {Promise<void>}
+   */
   async initialize(): Promise<void> {
     await app.whenReady();
     await this.createWindow();

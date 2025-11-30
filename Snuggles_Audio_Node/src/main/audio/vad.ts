@@ -9,6 +9,9 @@
  * 3. Use RMS + zero-crossing rate for robust detection
  */
 
+/**
+ * Configuration for Voice Activity Detection.
+ */
 export interface VADConfig {
   /** RMS threshold for voice detection (0-1, default: 0.01) */
   rmsThreshold: number;
@@ -26,6 +29,13 @@ export interface VADConfig {
   sampleRate: number;
 }
 
+/**
+ * Voice Activity Detector (VAD).
+ *
+ * Analyzes audio frames to detect speech based on Root Mean Square (RMS) energy
+ * and Zero-Crossing Rate (ZCR). It manages the state of user speech and
+ * respects turn-taking by suppressing user audio when Gemini is speaking.
+ */
 export class VoiceActivityDetector {
   private config: VADConfig;
   private speechFrameCount: number = 0;
@@ -33,6 +43,11 @@ export class VoiceActivityDetector {
   private isSpeaking: boolean = false;
   private isGeminiSpeaking: boolean = false;
 
+  /**
+   * Initializes the VoiceActivityDetector.
+   *
+   * @param {Partial<VADConfig>} [config] - Optional configuration overrides.
+   */
   constructor(config?: Partial<VADConfig>) {
     this.config = {
       rmsThreshold: config?.rmsThreshold ?? 0.01,
@@ -46,9 +61,13 @@ export class VoiceActivityDetector {
   }
 
   /**
-   * Process audio frame and determine if speech is present
-   * @param audioData - Float32Array audio samples
-   * @returns true if user is speaking and should send audio
+   * Process audio frame and determine if speech is present.
+   *
+   * Analyzes the frame's RMS and ZCR. Updates the internal state machine
+   * to decide if the user is speaking or silent.
+   *
+   * @param {Float32Array} audioData - Float32Array audio samples.
+   * @returns {boolean} true if user is speaking and should send audio.
    */
   public process(audioData: Float32Array): boolean {
     // Never send audio if Gemini is speaking (true turn-taking)
@@ -94,8 +113,10 @@ export class VoiceActivityDetector {
   }
 
   /**
-   * Signal that Gemini has started speaking
-   * This immediately stops user audio transmission (turn-taking)
+   * Signal that Gemini has started speaking.
+   * This immediately stops user audio transmission (turn-taking).
+   *
+   * @param {boolean} speaking - True if Gemini is speaking.
    */
   public setGeminiSpeaking(speaking: boolean): void {
     if (speaking !== this.isGeminiSpeaking) {
@@ -109,14 +130,16 @@ export class VoiceActivityDetector {
   }
 
   /**
-   * Check if user is currently speaking
+   * Check if user is currently speaking.
+   * @returns {boolean} True if user is speaking and Gemini is not.
    */
   public isSpeechActive(): boolean {
     return this.isSpeaking && !this.isGeminiSpeaking;
   }
 
   /**
-   * Reset VAD state
+   * Reset VAD state.
+   * Clears counters and resets speaking state.
    */
   public reset(): void {
     this.speechFrameCount = 0;
@@ -125,7 +148,11 @@ export class VoiceActivityDetector {
   }
 
   /**
-   * Calculate Root Mean Square (RMS) energy
+   * Calculate Root Mean Square (RMS) energy.
+   * Represents the loudness of the audio signal.
+   *
+   * @param {Float32Array} samples - Audio samples.
+   * @returns {number} The RMS value.
    */
   private calculateRMS(samples: Float32Array): number {
     let sum = 0;
@@ -136,8 +163,11 @@ export class VoiceActivityDetector {
   }
 
   /**
-   * Calculate Zero-Crossing Rate (ZCR)
-   * Higher ZCR indicates voice frequency content
+   * Calculate Zero-Crossing Rate (ZCR).
+   * Higher ZCR indicates voice frequency content.
+   *
+   * @param {Float32Array} samples - Audio samples.
+   * @returns {number} The ZCR in Hz.
    */
   private calculateZCR(samples: Float32Array): number {
     let crossings = 0;
@@ -155,7 +185,8 @@ export class VoiceActivityDetector {
   }
 
   /**
-   * Update configuration at runtime
+   * Update configuration at runtime.
+   * @param {Partial<VADConfig>} config - New configuration values.
    */
   public updateConfig(config: Partial<VADConfig>): void {
     this.config = { ...this.config, ...config };
@@ -163,14 +194,16 @@ export class VoiceActivityDetector {
   }
 
   /**
-   * Get current configuration
+   * Get current configuration.
+   * @returns {VADConfig} The current configuration.
    */
   public getConfig(): VADConfig {
     return { ...this.config };
   }
 
   /**
-   * Get current state for debugging
+   * Get current state for debugging.
+   * @returns {object} Current VAD state (speaking flags and counters).
    */
   public getState(): {
     isSpeaking: boolean;

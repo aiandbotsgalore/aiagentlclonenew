@@ -3,7 +3,12 @@ import { EventEmitter } from 'eventemitter3';
 const WORKLET_PROCESSOR_NAME = 'audio-recording-processor';
 const TARGET_SAMPLE_RATE = 16000;
 
-// Helper function to convert ArrayBuffer to base64 efficiently (prevents stack overflow)
+/**
+ * Converts an ArrayBuffer to a Base64 string efficiently.
+ *
+ * @param {ArrayBuffer} buffer - The buffer to convert.
+ * @returns {string} The Base64 encoded string.
+ */
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   let binary = '';
@@ -72,17 +77,41 @@ class AudioRecordingProcessor extends AudioWorkletProcessor {
 registerProcessor('${WORKLET_PROCESSOR_NAME}', AudioRecordingProcessor);
 `;
 
-// Fix: Added event types for EventEmitter to resolve 'emit' and 'on' not being found.
+/**
+ * Events emitted by the AudioRecorder.
+ */
 type AudioRecorderEvents = {
+  /**
+   * Emitted when audio data is available.
+   * @param {string} base64 - The audio data encoded in Base64.
+   */
   data: (base64: string) => void;
+  /**
+   * Emitted when an error occurs.
+   * @param {Error} error - The error object.
+   */
   error: (error: Error) => void;
 };
 
+/**
+ * Class responsible for recording audio from the user's microphone.
+ *
+ * It uses an AudioWorklet to process audio data, downsample it, and convert it to PCM 16-bit format.
+ * Emits 'data' events with Base64 encoded audio chunks.
+ */
 export class AudioRecorder extends EventEmitter<AudioRecorderEvents> {
   private stream: MediaStream | null = null;
   private context: AudioContext | null = null;
   private workletNode: AudioWorkletNode | null = null;
 
+  /**
+   * Starts recording audio.
+   *
+   * Requests microphone access, initializes the AudioContext and AudioWorklet,
+   * and starts processing audio data.
+   *
+   * @returns {Promise<void>}
+   */
   async start() {
     if (this.stream) return;
     try {
@@ -137,6 +166,13 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEvents> {
     }
   }
 
+  /**
+   * Stops recording audio.
+   *
+   * Stops the media stream tracks, disconnects the worklet, and closes the AudioContext.
+   *
+   * @returns {Promise<void>}
+   */
   async stop() {
     // Stop media stream tracks first
     if (this.stream) {

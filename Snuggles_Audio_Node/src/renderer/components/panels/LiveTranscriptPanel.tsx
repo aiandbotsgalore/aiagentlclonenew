@@ -1,11 +1,30 @@
 import React, { useRef, useEffect } from 'react';
 import { ConversationTurn } from '../../../shared/types';
 
+/**
+ * Props for the LiveTranscriptPanel component.
+ */
 interface LiveTranscriptPanelProps {
+  /**
+   * The list of conversation turns to display.
+   */
   messages: ConversationTurn[];
+  /**
+   * Whether audio recording is currently active.
+   */
   recording: boolean;
 }
 
+/**
+ * Panel displaying the live transcription of the conversation.
+ *
+ * Shows a scrollable list of messages from both the user (host) and the AI.
+ * Automatically scrolls to the newest message.
+ *
+ * @component
+ * @param {LiveTranscriptPanelProps} props - The component props.
+ * @returns {JSX.Element} The transcript panel.
+ */
 export const LiveTranscriptPanel: React.FC<LiveTranscriptPanelProps> = ({
   messages,
   recording
@@ -19,6 +38,11 @@ export const LiveTranscriptPanel: React.FC<LiveTranscriptPanelProps> = ({
     }
   }, [messages]);
 
+  /**
+   * Formats a timestamp into a readable time string.
+   * @param {number} timestamp - The timestamp in milliseconds.
+   * @returns {string} The formatted time string.
+   */
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString('en-US', {
@@ -28,10 +52,20 @@ export const LiveTranscriptPanel: React.FC<LiveTranscriptPanelProps> = ({
     });
   };
 
+  /**
+   * Gets the display name for a speaker role.
+   * @param {string} role - The role ('user' or 'assistant').
+   * @returns {string} The display name.
+   */
   const getSpeakerName = (role: string) => {
     return role === 'user' ? 'Demo Host' : 'AI Cohost';
   };
 
+  /**
+   * Gets the initials for a speaker role.
+   * @param {string} role - The role.
+   * @returns {string} The initials.
+   */
   const getSpeakerInitials = (role: string) => {
     return role === 'user' ? 'DH' : 'AI';
   };
