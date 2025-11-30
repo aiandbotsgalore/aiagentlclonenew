@@ -3,10 +3,11 @@ import { create, insertMultiple, search, Orama } from '@orama/orama';
 import { persistToFile, restoreFromFile } from '@orama/plugin-data-persistence/server';
 import path from 'path';
 import fs from 'fs';
+import { app } from 'electron';
 import { DocumentIngestor } from './ingestor';
 import { KnowledgeDocument, RAGResult } from '../../shared/types';
 
-const INDEX_PATH = path.join(process.cwd(), 'snuggles-index.json');
+const INDEX_PATH = path.join(app.getPath('userData'), 'snuggles-index.json');
 
 /**
  * KnowledgeStore manages the Orama vector search index
