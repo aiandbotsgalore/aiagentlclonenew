@@ -280,18 +280,23 @@ class SnugglesApp2025 {
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js')
+        preload: path.join(__dirname, '../main/preload.js') // Correct path relative to main2025.js
       },
       title: 'Dr. Snuggles - Echosphere AI (Dec 2025)',
       icon: path.join(__dirname, '../../public/icon.png')
     });
 
     // Load renderer
-    if (process.env.NODE_ENV === 'development') {
+    // Check if Vite dev server is running (always in dev mode for npm run dev)
+    const isDev = !app.isPackaged;
+
+    if (isDev) {
+      console.log('[Main] Loading from Vite dev server: http://localhost:5173');
       await this.mainWindow.loadURL('http://localhost:5173');
       this.mainWindow.webContents.openDevTools();
     } else {
-      await this.mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+      console.log('[Main] Loading from built files');
+      await this.mainWindow.loadFile(path.join(__dirname, '../../renderer/index.html'));
     }
 
     this.mainWindow.on('closed', () => {
