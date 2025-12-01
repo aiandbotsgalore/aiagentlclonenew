@@ -340,11 +340,30 @@ class SnugglesApp2025 {
 
     if (isDev) {
       console.log('[Main] Loading from Vite dev server: http://localhost:5173');
-      await this.mainWindow.loadURL('http://localhost:5173');
-      this.mainWindow.webContents.openDevTools();
+      // Retry logic for Vite dev server (Windows startup fix)
+      const loadWithRetry = async (retries = 5, delay = 2000) => {
+        try {
+          await this.mainWindow?.loadURL('http://localhost:5173');
+          this.mainWindow?.webContents.openDevTools();
+          console.log('[Main] ✅ Connected to Vite dev server');
+        } catch (err: any) {
+          if (retries > 0) {
+            console.log(`[Main] ⏳ Waiting for Vite dev server... (${retries} retries left)`);
+            setTimeout(() => loadWithRetry(retries - 1, delay), delay);
+          } else {
+            console.error('[Main] ❌ Failed to load Vite dev server:', err.message);
+          }
+        }
+      };
+
+      loadWithRetry();
     } else {
       console.log('[Main] Loading from built files');
-      await this.mainWindow.loadFile(path.join(__dirname, '../../renderer/index.html'));
+      try {
+        await this.mainWindow.loadFile(path.join(__dirname, '../../renderer/index.html'));
+      } catch (e: any) {
+        console.error('[Main] ❌ Failed to load built files:', e.message);
+      }
     }
 
     this.mainWindow.on('closed', () => {
