@@ -1,56 +1,28 @@
 /**
- * Session Memory Service - JSON Storage
+ * Session Memory Service - Dexie.js
  *
- * Manages persistent storage for session summaries using a local JSON file.
- * This replaces the Dexie implementation to ensure compatibility with the Electron Main process
- * on Windows and other platforms without requiring native database drivers.
+ * Manages persistent storage for session summaries and conversation history.
  */
 
-import fs from 'fs';
-import path from 'path';
-import { app } from 'electron';
+import Dexie, { Table } from 'dexie';
 import { SessionSummary } from '../../shared/types';
 
-const MEMORY_FILE_NAME = 'session-memory.json';
-
-export class SessionMemoryService {
-  private filePath: string;
-  private summaries: SessionSummary[] = [];
+export class SessionMemoryDB extends Dexie {
+  summaries!: Table<SessionSummary, string>;
 
   constructor() {
-    this.filePath = path.join(app.getPath('userData'), MEMORY_FILE_NAME);
-    this.load();
-    console.log(`[SessionMemory] Initialized at ${this.filePath}`);
+    super('SnugglesMemory');
+    this.version(1).stores({
+      summaries: 'id, timestamp, turnCount'
+    });
   }
+}
 
-  /**
-   * Load data from disk.
-   */
-  private load(): void {
-    try {
-      if (fs.existsSync(this.filePath)) {
-        const data = fs.readFileSync(this.filePath, 'utf-8');
-        this.summaries = JSON.parse(data);
-        console.log(`[SessionMemory] Loaded ${this.summaries.length} summaries`);
-      } else {
-        this.summaries = [];
-        this.save(); // Initialize file
-      }
-    } catch (error) {
-      console.error('[SessionMemory] Failed to load memory:', error);
-      this.summaries = [];
-    }
-  }
+export class SessionMemoryService {
+  private db: SessionMemoryDB;
 
-  /**
-   * Save data to disk.
-   */
-  private save(): void {
-    try {
-      fs.writeFileSync(this.filePath, JSON.stringify(this.summaries, null, 2), 'utf-8');
-    } catch (error) {
-      console.error('[SessionMemory] Failed to save memory:', error);
-    }
+  constructor() {
+    this.db = new SessionMemoryDB();
   }
 
   /**
@@ -58,8 +30,7 @@ export class SessionMemoryService {
    * @param summary The session summary to add.
    */
   async addSummary(summary: SessionSummary): Promise<void> {
-    this.summaries.push(summary);
-    this.save();
+    await this.db.summaries.put(summary);
   }
 
   /**
@@ -67,19 +38,19 @@ export class SessionMemoryService {
    * @param count Number of summaries to retrieve.
    */
   async getRecentSummaries(count: number): Promise<string[]> {
-    // Sort by timestamp descending
-    const sorted = [...this.summaries].sort((a, b) => b.timestamp - a.timestamp);
+    const summaries = await this.db.summaries
+      .orderBy('timestamp')
+      .reverse()
+      .limit(count)
+      .toArray();
 
-    // Take top N
-    const recent = sorted.slice(0, count);
-
-    return recent.map(s => s.summary);
+    return summaries.map(s => s.summary);
   }
 
   /**
    * Get all summaries.
    */
   async getAllSummaries(): Promise<SessionSummary[]> {
-    return [...this.summaries].sort((a, b) => b.timestamp - a.timestamp);
+    return await this.db.summaries.orderBy('timestamp').reverse().toArray();
   }
 }
