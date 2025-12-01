@@ -10,3 +10,19 @@ export type Agent = {
     style: 'calm' | 'energetic' | 'formal';
   };
 };
+
+export type Message = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  isAudio?: boolean;  // True if message was spoken
+};
+
+export type Conversation = {
+  id: string;
+  title: string;
+  messages: Message[];
+  createdAt: Date;
+  updatedAt: Date;
+};

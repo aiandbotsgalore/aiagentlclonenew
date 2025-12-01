@@ -20,6 +20,7 @@ type LiveClientEvents = {
   close: () => void;
   error: (error: Error) => void;
   audio: (buffer: ArrayBuffer) => void;
+  text: (text: string) => void;  // Added for conversation history
 };
 
 export class GenAILiveClient extends EventEmitter<LiveClientEvents> {
@@ -44,10 +45,19 @@ export class GenAILiveClient extends EventEmitter<LiveClientEvents> {
     return part?.inlineData?.mimeType?.startsWith('audio/') && part.inlineData.data;
   }
 
+  private isTextPart(part: any): boolean {
+    return part?.text && typeof part.text === 'string';
+  }
+
   private handleAudioPart(part: any): void {
     console.log('Got audio response, size:', part.inlineData.data.length);
     const audioBuffer = base64ToArrayBuffer(part.inlineData.data);
     this.emit('audio', audioBuffer);
+  }
+
+  private handleTextPart(part: any): void {
+    console.log('Got text response:', part.text);
+    this.emit('text', part.text);
   }
 
   private normalizeError(e: ErrorEvent | Error | unknown): Error {
@@ -88,7 +98,7 @@ export class GenAILiveClient extends EventEmitter<LiveClientEvents> {
         model: MODEL,
         config: {
           systemInstruction,
-          responseModalities: [Modality.AUDIO]
+          responseModalities: [Modality.AUDIO, Modality.TEXT]  // Enable both for conversation history
         },
         callbacks: {
           onopen: () => {
@@ -110,6 +120,9 @@ export class GenAILiveClient extends EventEmitter<LiveClientEvents> {
               for (const part of parts) {
                 if (this.isAudioPart(part)) {
                   this.handleAudioPart(part);
+                }
+                if (this.isTextPart(part)) {
+                  this.handleTextPart(part);
                 }
               }
             } catch (error) {

@@ -3,6 +3,7 @@ import { GenAILiveClient } from '../lib/GenAILiveClient';
 import { AudioStreamer } from '../lib/AudioStreamer';
 import { useAgentStore } from '../stores/useAgent';
 import { useUserStore } from '../stores/useUser';
+import { useConversationStore } from '../stores/useConversation';
 
 export interface UseLiveApiReturn {
   isConnected: boolean;
@@ -30,7 +31,7 @@ export const useLiveApi = (): UseLiveApiReturn => {
   const clientRef = useRef<GenAILiveClient | null>(null);
   const streamerRef = useRef<AudioStreamer | null>(null);
   const streamerInitialized = useRef(false);
-  
+
   // Reconnection control refs
   const shouldReconnect = useRef(true);  // False when user explicitly disconnects
   const reconnectAttempts = useRef(0);
@@ -45,6 +46,7 @@ export const useLiveApi = (): UseLiveApiReturn => {
 
   const { current: currentAgent } = useAgentStore();
   const { name, info } = useUserStore();
+  const { addMessage } = useConversationStore();
 
   // Internal connect function that can be called by reconnection logic
   const connectInternal = useCallback(async (isReconnect = false): Promise<void> => {
@@ -188,6 +190,11 @@ export const useLiveApi = (): UseLiveApiReturn => {
 
     const onAudio = (audio: ArrayBuffer) => streamerRef.current?.receiveAudio(audio);
 
+    const onText = (text: string) => {
+      console.log('Received AI text response:', text);
+      addMessage('assistant', text, true);  // isAudio=true since it came with voice
+    };
+
     // Throttle volume updates to prevent excessive re-renders
     const onVolume = (volume: number) => {
       const now = Date.now();
@@ -201,6 +208,7 @@ export const useLiveApi = (): UseLiveApiReturn => {
     newClient.on('close', onClose);
     newClient.on('error', onError);
     newClient.on('audio', onAudio);
+    newClient.on('text', onText);
     newStreamer.on('volume', onVolume);
 
     return () => {
