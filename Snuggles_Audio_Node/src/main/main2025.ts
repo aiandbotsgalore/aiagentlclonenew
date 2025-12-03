@@ -20,7 +20,7 @@ import { KnowledgeStore } from './knowledge/store';
 import { IPC_CHANNELS, AppConfig, LatencyMetrics } from '../shared/types';
 
 const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
-const API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAGnm_VbusODo7gdoonGgb-56nEvUHtBrg';
+const API_KEY = process.env.GEMINI_API_KEY || 'AQ.Ab8RN6LpETVRXFZ-BC0vzncaNLHl6_CbrtNxGa1BAnF1FCHrSg';
 
 class SnugglesApp2025 {
   private mainWindow: BrowserWindow | null = null;
